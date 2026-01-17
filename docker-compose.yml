@@ -1,0 +1,44 @@
+# ============================================
+# Spotçu Dükkanı v3.1 - Docker Compose
+# Easypanel / VPS uyumlu
+# ============================================
+#
+# Kullanım:
+#   docker-compose up -d
+#
+# Notlar:
+#   - Veritabanı harici olarak sağlanmalı (Easypanel veya ayrı MySQL)
+#   - .env dosyasını oluşturun ve gerekli değişkenleri ayarlayın
+#
+
+version: "3.8"
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: spotcudukkani
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=${DATABASE_URL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-spotcu2024}
+      - JWT_SECRET=${JWT_SECRET:-change-this-secret}
+      - WEBHOOK_URL=${WEBHOOK_URL:-}
+      - BLOG_API_KEY=${BLOG_API_KEY:-}
+    volumes:
+      - uploads:/app/public/uploads
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  uploads:
+    driver: local
