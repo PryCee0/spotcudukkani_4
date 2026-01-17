@@ -72,8 +72,21 @@ async function startServer() {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   
-  // Serve uploaded files from /uploads
-  app.use("/uploads", express.static(path.resolve(process.cwd(), "public", "uploads")));
+  // v4.5: Serve uploaded files from multiple locations for compatibility
+  // Priority: 1) dist/public/uploads (production build), 2) public/uploads (development/fallback)
+  const distUploadsPath = process.env.NODE_ENV === "development"
+    ? path.resolve(import.meta.dirname, "../..", "dist", "public", "uploads")
+    : path.resolve(import.meta.dirname, "public", "uploads");
+  const rootUploadsPath = path.resolve(process.cwd(), "public", "uploads");
+  
+  // Serve from dist first (production), then fallback to root public
+  if (fs.existsSync(distUploadsPath)) {
+    app.use("/uploads", express.static(distUploadsPath));
+    console.log(`[Uploads] Serving from: ${distUploadsPath}`);
+  }
+  // Always also serve from root public/uploads (for runtime uploads and fallback)
+  app.use("/uploads", express.static(rootUploadsPath));
+  console.log(`[Uploads] Fallback serving from: ${rootUploadsPath}`);
   
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);

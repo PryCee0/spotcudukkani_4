@@ -474,12 +474,14 @@ export const appRouter = router({
 
     // Public: Create blog post from webhook (n8n integration)
     // This endpoint is public but requires an API key
+    // v4.5: Supports both coverImage and imageUrl for backward compatibility
     createFromWebhook: publicProcedure
       .input(z.object({
         title: z.string().min(1, "Başlık gerekli"),
         content: z.string().min(1, "İçerik gerekli"),
         excerpt: z.string().optional(),
         coverImage: z.string().optional(),
+        imageUrl: z.string().optional(), // v4.5: n8n backward compatibility
         productId: z.number().optional(),
         apiKey: z.string(),
       }))
@@ -494,12 +496,15 @@ export const appRouter = router({
 
         const slug = createSlug(input.title);
         
+        // v4.5: Use coverImage if provided, otherwise fall back to imageUrl
+        const finalCoverImage = input.coverImage || input.imageUrl || null;
+        
         return await createBlogPost({
           title: input.title,
           slug,
           content: input.content,
           excerpt: input.excerpt || null,
-          coverImage: input.coverImage || null,
+          coverImage: finalCoverImage,
           isPublished: 1, // Auto-publish from webhook
           productId: input.productId || null,
         });
