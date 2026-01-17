@@ -30,7 +30,7 @@ export default function Header() {
             {/* Logo */}
             <Link href="/" className="flex items-center gap-3">
               <img 
-                src="/logo.png" 
+                src="uploads/logo.png" 
                 alt="Spotçu Dükkanı Logo" 
                 className="h-10 md:h-12 lg:h-14 w-auto"
                 onError={(e) => {
