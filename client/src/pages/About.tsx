@@ -77,16 +77,15 @@ export default function About() {
                 </p>
               </div>
             </div>
+            {/* v4.5: Hakkımızda görseli güncellendi */}
             <div className="relative">
               <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl">
-  <img
-    src="/uploads/hakkimizda.webp"
-    alt="Spotçu Dükkanı"
-    className="w-full h-full object-cover"
-    loading="lazy"
-  />
-</div>
-
+                <img 
+                  src="/uploads/hakkimizda.webp" 
+                  alt="Spotçu Dükkanı - Profesyonel Taşıma Hizmeti"
+                  className="w-full h-full object-cover"
+                />
+              </div>
               <div className="absolute -bottom-6 -left-6 bg-primary text-foreground p-6 rounded-2xl shadow-xl">
                 <div className="text-4xl font-bold">12+</div>
                 <div className="text-sm font-medium">Yıllık Tecrübe</div>

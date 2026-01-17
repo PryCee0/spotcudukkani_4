@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const PHONE_NUMBER = "+905393160007";
 
+// v4.5: Slider görselleri /uploads/ klasöründen yükleniyor
 const slides = [
   {
     id: 1,
