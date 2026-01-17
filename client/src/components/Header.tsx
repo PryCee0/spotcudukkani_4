@@ -47,9 +47,7 @@ export default function Header() {
               </div>
               {/* Text logo shown alongside or as fallback */}
               <div className="flex items-center">
-                <span className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-[#2F2F2F]">
-                  Spotçu <span className="text-[#FFD300]">Dükkanı</span>
-                </span>
+                <img src="/uploads/logo.png" alt="Spotçu Dükkanı" className="h-12 md:h-16 w-auto" />
               </div>
             </Link>
 

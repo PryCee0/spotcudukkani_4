@@ -78,15 +78,15 @@ export default function About() {
               </div>
             </div>
             <div className="relative">
-              <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-[#FFD300]/20 to-[#2F2F2F]/10 flex items-center justify-center">
-                <div className="text-center p-8">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-[#FFD300] flex items-center justify-center">
-                    <MapPin className="w-10 h-10 text-[#2F2F2F]" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-[#2F2F2F] mb-2">Kadıköy Fikirtepe</h3>
-                  <p className="text-[#2F2F2F]/70">Özbey Caddesi No: 59</p>
-                </div>
-              </div>
+              <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl">
+  <img
+    src="/uploads/hakkimizda.webp"
+    alt="Spotçu Dükkanı"
+    className="w-full h-full object-cover"
+    loading="lazy"
+  />
+</div>
+
               <div className="absolute -bottom-6 -left-6 bg-primary text-foreground p-6 rounded-2xl shadow-xl">
                 <div className="text-4xl font-bold">12+</div>
                 <div className="text-sm font-medium">Yıllık Tecrübe</div>

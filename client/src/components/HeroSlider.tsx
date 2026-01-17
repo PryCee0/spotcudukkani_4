@@ -11,21 +11,21 @@ const slides = [
     title: "Eviniz İçin Uygun Fiyatlı Çözümler",
     subtitle: "Kadıköy Fikirtepe'de kaliteli ve temiz spot eşya fırsatları.",
     bgGradient: "from-[#2F2F2F]/95 to-[#2F2F2F]/80",
-    bgImage: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=1920&q=80",
+    bgImage: "/uploads/slider1.webp",
   },
   {
     id: 2,
     title: "2.El eşyalarınızı değerinde alıyoruz.",
     subtitle: "Fikirtepe'de anında nakit ödeme ve yerinden alım hizmeti.",
     bgGradient: "from-[#2F2F2F]/95 to-[#2F2F2F]/80",
-    bgImage: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&q=80",
+    bgImage: "/uploads/slider2.webp",
   },
   {
     id: 3,
     title: "spotcudukkani.com",
     subtitle: "Kadıköy Fikirtepe'de Güvenilir 2.EL Eşya Alım Satım Merkezi",
     bgGradient: "from-[#2F2F2F]/95 to-[#2F2F2F]/80",
-    bgImage: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1920&q=80",
+    bgImage: "/uploads/slider3.webp",
   },
 ];
 
