@@ -1,21 +1,18 @@
 import Layout from "@/components/Layout";
-import { Phone, Mail, MapPin, Clock, MessageCircle } from "lucide-react";
+import { Phone, Mail, MapPin, Clock, MessageCircle, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 const PHONE_NUMBER = "+905393160007";
 const PHONE_DISPLAY = "+90 539 316 00 07";
 const EMAIL = "spotcudukkani@gmail.com";
-const ADDRESS = "Özbey Caddesi No: 59, Fikirtepe, Kadıköy/İstanbul";
+// v5.0: Updated address
+const ADDRESS = "Dumlupınar Mahallesi, Fikirtepe, Kadıköy/İstanbul";
 const FACEBOOK_URL = "https://facebook.com/ikincielesyadudullu";
 const INSTAGRAM_URL = "https://instagram.com/spotcudukkani.comm";
 
-// v4.5: Doğru koordinatlar - Özbey Caddesi No:59, Fikirtepe, Kadıköy
-// Koordinatlar: 40.994640, 29.049306 (Yandex Maps'ten doğrulanmış)
-const GOOGLE_MAPS_EMBED = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d752.8!2d29.049306!3d40.994640!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14cac79c3e9f9b8d%3A0x0!2zNDDCsDU5JzQwLjciTiAyOcKwMDInNTcuNSJF!5e0!3m2!1str!2str!4v1705500000000!5m2!1str!2str";
-
-// Alternatif: Google Maps Place Search ile
-const GOOGLE_MAPS_PLACE = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3011.5!2d29.0471!3d40.9946!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14cac79c3e9f9b8d%3A0x0!2zNDDCsDU5JzQwLjciTiAyOcKwMDInNTcuNSJF!5e0!3m2!1str!2str!4v1705500000000";
+// v5.0: Updated coordinates for Dumlupınar Mahallesi
+const GOOGLE_MAPS_EMBED = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3011.5!2d29.047!3d40.995!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDDCsDU5JzQyLjAiTiAyOcKwMDInNDkuMiJF!5e0!3m2!1str!2str!4v1705500000000";
 
 const contactInfo = [
   {
@@ -51,8 +48,8 @@ export default function Contact() {
   const whatsappLink = `https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent("Merhaba, bilgi almak istiyorum.")}`;
   const phoneLink = `tel:${PHONE_NUMBER}`;
   
-  // v4.5: Google Maps yol tarifi linki - doğru koordinatlarla
-  const directionsLink = `https://www.google.com/maps/dir/?api=1&destination=40.994640,29.049306&destination_place_id=ChIJjZuf_pzHyhQR0000000000`;
+  // v5.0: Google Maps yol tarifi linki - Dumlupınar Mahallesi
+  const directionsLink = `https://www.google.com/maps/dir/?api=1&destination=Dumlupınar+Mahallesi+Fikirtepe+Kadıköy+İstanbul`;
 
   return (
     <Layout>
@@ -189,7 +186,7 @@ export default function Contact() {
                       <p className="text-base lg:text-lg text-[#2F2F2F]/70 leading-relaxed mb-4">
                         {ADDRESS}
                       </p>
-                      {/* v4.5: Yol tarifi butonu */}
+                      {/* v5.0: Yol tarifi butonu */}
                       <a 
                         href={directionsLink}
                         target="_blank"
@@ -198,6 +195,7 @@ export default function Contact() {
                       >
                         <MapPin className="w-4 h-4" />
                         Yol Tarifi Al
+                        <ExternalLink className="w-3 h-3" />
                       </a>
                     </div>
                   </div>
@@ -237,7 +235,6 @@ export default function Contact() {
                 Harita
               </h2>
               <div className="rounded-2xl overflow-hidden shadow-lg h-[400px] lg:h-[500px]">
-                {/* v4.5: Doğru koordinatlarla Google Maps iframe */}
                 <iframe
                   src={GOOGLE_MAPS_EMBED}
                   width="100%"
@@ -246,12 +243,12 @@ export default function Contact() {
                   allowFullScreen
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
-                  title="Spotçu Dükkanı Konum - Özbey Caddesi No:59, Fikirtepe, Kadıköy"
+                  title="Spotçu Dükkanı Konum - Dumlupınar Mahallesi, Fikirtepe, Kadıköy"
                 />
               </div>
-              {/* v4.5: Harita altı bilgi */}
+              {/* v5.0: Harita altı bilgi */}
               <p className="text-sm text-[#2F2F2F]/60 mt-4 text-center">
-                Koordinatlar: 40.994640, 29.049306 | Fikirtepe Metrobüs Durağı yakını
+                Fikirtepe Metrobüs Durağı yakını | Kadıköy Fikirtepe
               </p>
             </div>
           </div>

@@ -1,7 +1,8 @@
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, X, Phone, MapPin, Clock, Share2 } from "lucide-react";
+import { MessageCircle, X, Phone, MapPin, Clock, Share2, Check, Copy } from "lucide-react";
 import ImageCarousel from "./ImageCarousel";
 import { toast } from "sonner";
 
@@ -44,9 +45,37 @@ interface ProductDetailModalProps {
     imageUrl?: string | null;
     images?: ProductImage[] | null;
   } | null;
+  // v5.0: Deep linking support
+  enableDeepLink?: boolean;
 }
 
-export default function ProductDetailModal({ isOpen, onClose, product }: ProductDetailModalProps) {
+export default function ProductDetailModal({ 
+  isOpen, 
+  onClose, 
+  product,
+  enableDeepLink = true,
+}: ProductDetailModalProps) {
+  const [copied, setCopied] = useState(false);
+
+  // v5.0: Update URL when modal opens (deep linking)
+  useEffect(() => {
+    if (enableDeepLink && isOpen && product?.id) {
+      const currentUrl = new URL(window.location.href);
+      currentUrl.searchParams.set("id", product.id.toString());
+      window.history.replaceState(null, "", currentUrl.toString());
+    }
+  }, [isOpen, product?.id, enableDeepLink]);
+
+  // v5.0: Remove product ID from URL when modal closes
+  const handleClose = () => {
+    if (enableDeepLink) {
+      const currentUrl = new URL(window.location.href);
+      currentUrl.searchParams.delete("id");
+      window.history.replaceState(null, "", currentUrl.toString());
+    }
+    onClose();
+  };
+
   if (!product) return null;
 
   const whatsappMessage = encodeURIComponent(
@@ -57,23 +86,40 @@ export default function ProductDetailModal({ isOpen, onClose, product }: Product
   const categoryLabel = product.category === "mobilya" ? "2.El Mobilya" : "2.El Beyaz Eşya";
   const subCategoryLabel = product.subCategory ? SUB_CATEGORY_LABELS[product.subCategory] : null;
 
+  // v5.0: Generate shareable URL
+  const getShareUrl = () => {
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/urunler?id=${product.id}`;
+  };
+
   // Share functionality
   const handleShare = async () => {
+    const shareUrl = getShareUrl();
     const shareData = {
       title: product.title,
       text: `${product.title} - Spotçu Dükkanı Kadıköy Fikirtepe`,
-      url: window.location.href,
+      url: shareUrl,
     };
 
     try {
       if (navigator.share) {
         await navigator.share(shareData);
       } else {
-        await navigator.clipboard.writeText(window.location.href);
+        await navigator.clipboard.writeText(shareUrl);
+        setCopied(true);
         toast.success("Link kopyalandı!");
+        setTimeout(() => setCopied(false), 2000);
       }
     } catch (error) {
-      // User cancelled or error
+      // User cancelled or error - try clipboard as fallback
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        setCopied(true);
+        toast.success("Link kopyalandı!");
+        setTimeout(() => setCopied(false), 2000);
+      } catch {
+        // Clipboard also failed
+      }
     }
   };
 
@@ -87,11 +133,22 @@ export default function ProductDetailModal({ isOpen, onClose, product }: Product
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="max-w-3xl max-h-[95vh] overflow-y-auto p-0 gap-0">
+        {/* v5.0: Explicit close button - always visible */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleClose}
+          className="absolute right-4 top-4 z-50 rounded-full bg-white/95 hover:bg-white shadow-md w-10 h-10 border border-gray-200"
+          aria-label="Kapat"
+        >
+          <X className="w-5 h-5" />
+        </Button>
+
         {/* Header */}
         <DialogHeader className="sticky top-0 z-10 bg-white border-b border-[#2F2F2F]/10 px-6 py-4">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start justify-between gap-4 pr-12">
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap gap-2 mb-2">
                 <Badge
@@ -112,7 +169,7 @@ export default function ProductDetailModal({ isOpen, onClose, product }: Product
                   </Badge>
                 )}
               </div>
-              <DialogTitle className="text-xl md:text-2xl font-bold text-[#2F2F2F] pr-8">
+              <DialogTitle className="text-xl md:text-2xl font-bold text-[#2F2F2F]">
                 {product.title}
               </DialogTitle>
             </div>
@@ -124,7 +181,11 @@ export default function ProductDetailModal({ isOpen, onClose, product }: Product
                 onClick={handleShare}
                 aria-label="Paylaş"
               >
-                <Share2 className="w-5 h-5" />
+                {copied ? (
+                  <Check className="w-5 h-5 text-green-500" />
+                ) : (
+                  <Share2 className="w-5 h-5" />
+                )}
               </Button>
             </div>
           </div>

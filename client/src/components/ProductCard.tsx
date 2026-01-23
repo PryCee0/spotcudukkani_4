@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearch } from "wouter";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +52,17 @@ export default function ProductCard({
   subCategory 
 }: ProductCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const searchString = useSearch();
+
+  // v5.0: Check URL for product ID to open modal (deep linking)
+  useEffect(() => {
+    const searchParams = new URLSearchParams(searchString);
+    const urlProductId = searchParams.get("id");
+    
+    if (urlProductId && parseInt(urlProductId) === id) {
+      setIsModalOpen(true);
+    }
+  }, [searchString, id]);
 
   const whatsappMessage = encodeURIComponent(
     `Merhaba, "${title}" hakkında fiyat ve bilgi almak istiyorum.`
@@ -169,11 +181,12 @@ export default function ProductCard({
         </CardContent>
       </Card>
 
-      {/* Product Detail Modal */}
+      {/* Product Detail Modal with deep linking support */}
       <ProductDetailModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         product={productData}
+        enableDeepLink={true}
       />
     </>
   );

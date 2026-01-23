@@ -1,6 +1,6 @@
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, asc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, products, InsertProduct, Product } from "../drizzle/schema";
+import { InsertUser, users, products, InsertProduct, Product, categories, InsertCategory, Category, blogPosts, InsertBlogPost, BlogPost } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -88,7 +88,117 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// Product queries
+// ==================== Category Queries (v5.0) ====================
+
+export async function createCategory(category: InsertCategory): Promise<Category | null> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot create category: database not available");
+    return null;
+  }
+
+  try {
+    await db.insert(categories).values(category);
+    const result = await db.select().from(categories).orderBy(desc(categories.id)).limit(1);
+    return result[0] || null;
+  } catch (error) {
+    console.error("[Database] Failed to create category:", error);
+    throw error;
+  }
+}
+
+export async function getCategories(parentCategory?: "mobilya" | "beyaz_esya", activeOnly = true) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get categories: database not available");
+    return [];
+  }
+
+  try {
+    let conditions = [];
+    if (activeOnly) {
+      conditions.push(eq(categories.isActive, 1));
+    }
+    if (parentCategory) {
+      conditions.push(eq(categories.parentCategory, parentCategory));
+    }
+
+    if (conditions.length > 0) {
+      return await db.select().from(categories).where(and(...conditions)).orderBy(asc(categories.sortOrder), asc(categories.name));
+    }
+    return await db.select().from(categories).orderBy(asc(categories.sortOrder), asc(categories.name));
+  } catch (error) {
+    console.error("[Database] Failed to get categories:", error);
+    return [];
+  }
+}
+
+export async function getCategoryById(id: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get category: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db.select().from(categories).where(eq(categories.id, id)).limit(1);
+    return result[0] || null;
+  } catch (error) {
+    console.error("[Database] Failed to get category:", error);
+    return null;
+  }
+}
+
+export async function getCategoryBySlug(slug: string) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get category: database not available");
+    return null;
+  }
+
+  try {
+    const result = await db.select().from(categories).where(eq(categories.slug, slug)).limit(1);
+    return result[0] || null;
+  } catch (error) {
+    console.error("[Database] Failed to get category:", error);
+    return null;
+  }
+}
+
+export async function updateCategory(id: number, data: Partial<InsertCategory>) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot update category: database not available");
+    return null;
+  }
+
+  try {
+    await db.update(categories).set(data).where(eq(categories.id, id));
+    return await getCategoryById(id);
+  } catch (error) {
+    console.error("[Database] Failed to update category:", error);
+    throw error;
+  }
+}
+
+export async function deleteCategory(id: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot delete category: database not available");
+    return false;
+  }
+
+  try {
+    await db.delete(categories).where(eq(categories.id, id));
+    return true;
+  } catch (error) {
+    console.error("[Database] Failed to delete category:", error);
+    throw error;
+  }
+}
+
+// ==================== Product Queries ====================
+
 export async function createProduct(product: InsertProduct): Promise<Product | null> {
   const db = await getDb();
   if (!db) {
@@ -221,9 +331,7 @@ export async function toggleProductActive(id: number) {
   return await updateProduct(id, { isActive: product.isActive === 1 ? 0 : 1 });
 }
 
-
-// Blog post queries
-import { blogPosts, InsertBlogPost, BlogPost } from "../drizzle/schema";
+// ==================== Blog Post Queries ====================
 
 export async function createBlogPost(post: InsertBlogPost): Promise<BlogPost | null> {
   const db = await getDb();

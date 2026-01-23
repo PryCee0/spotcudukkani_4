@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import { ChevronLeft, ChevronRight, ImageOff, X, ZoomIn } from "lucide-react";
+import { ChevronLeft, ChevronRight, ImageOff, X, ZoomIn, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +18,53 @@ interface ImageCarouselProps {
   autoPlayInterval?: number;
 }
 
+// v5.0: Lazy loading image component
+function LazyImage({ 
+  src, 
+  alt, 
+  className,
+  onLoad,
+}: { 
+  src: string; 
+  alt: string; 
+  className?: string;
+  onLoad?: () => void;
+}) {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
+  return (
+    <div className="relative w-full h-full">
+      {!isLoaded && !hasError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-[#F9F8F4]">
+          <Loader2 className="w-8 h-8 animate-spin text-[#FFD300]" />
+        </div>
+      )}
+      {hasError ? (
+        <div className="absolute inset-0 flex items-center justify-center bg-[#F9F8F4]">
+          <ImageOff className="w-12 h-12 text-[#2F2F2F]/20" />
+        </div>
+      ) : (
+        <img
+          src={src}
+          alt={alt}
+          className={cn(
+            className,
+            "transition-opacity duration-300",
+            isLoaded ? "opacity-100" : "opacity-0"
+          )}
+          loading="lazy"
+          onLoad={() => {
+            setIsLoaded(true);
+            onLoad?.();
+          }}
+          onError={() => setHasError(true)}
+        />
+      )}
+    </div>
+  );
+}
+
 export default function ImageCarousel({
   images,
   fallbackImage,
@@ -31,6 +78,7 @@ export default function ImageCarousel({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [preloadedImages, setPreloadedImages] = useState<Set<number>>(new Set([0]));
 
   // Build image array from images or fallback
   const imageList: string[] = [];
@@ -41,6 +89,20 @@ export default function ImageCarousel({
   }
 
   const hasMultipleImages = imageList.length > 1;
+
+  // v5.0: Preload adjacent images
+  useEffect(() => {
+    if (imageList.length <= 1) return;
+
+    const toPreload = new Set(preloadedImages);
+    const prevIndex = (currentIndex - 1 + imageList.length) % imageList.length;
+    const nextIndex = (currentIndex + 1) % imageList.length;
+    
+    toPreload.add(prevIndex);
+    toPreload.add(nextIndex);
+    
+    setPreloadedImages(toPreload);
+  }, [currentIndex, imageList.length]);
 
   // Navigation functions
   const goToNext = useCallback(() => {
@@ -131,14 +193,14 @@ export default function ImageCarousel({
           onTouchEnd={onTouchEnd}
           onClick={() => setIsFullscreen(true)}
         >
-          <img
+          <LazyImage
             src={imageList[currentIndex]}
             alt={`${title} - Fotoğraf ${currentIndex + 1}`}
             className="w-full h-full object-cover transition-transform duration-300"
           />
           
           {/* Zoom indicator */}
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center pointer-events-none">
             <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 rounded-full p-3 shadow-lg">
               <ZoomIn className="w-6 h-6 text-[#2F2F2F]" />
             </div>
@@ -205,7 +267,7 @@ export default function ImageCarousel({
         )}
       </div>
 
-      {/* Thumbnails */}
+      {/* Thumbnails with lazy loading */}
       {showThumbnails && hasMultipleImages && (
         <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
           {imageList.map((url, index) => (
@@ -223,6 +285,7 @@ export default function ImageCarousel({
                 src={url}
                 alt={`${title} - Küçük resim ${index + 1}`}
                 className="w-full h-full object-cover"
+                loading="lazy"
               />
             </button>
           ))}
@@ -319,6 +382,7 @@ export default function ImageCarousel({
                     src={url}
                     alt={`${title} - Küçük resim ${index + 1}`}
                     className="w-full h-full object-cover"
+                    loading="lazy"
                   />
                 </button>
               ))}
@@ -326,6 +390,15 @@ export default function ImageCarousel({
           )}
         </div>
       )}
+
+      {/* v5.0: Preload adjacent images */}
+      <div className="hidden">
+        {imageList.map((url, index) => 
+          preloadedImages.has(index) && index !== currentIndex ? (
+            <link key={index} rel="preload" as="image" href={url} />
+          ) : null
+        )}
+      </div>
     </>
   );
 }

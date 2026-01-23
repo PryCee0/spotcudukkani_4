@@ -1,5 +1,59 @@
 # Changelog
 
+## [5.0.0] - 2025-01-23
+
+### Yeni Özellikler
+
+#### Ürün Yönetimi
+- **Ürün Düzenleme**: Admin panelinde mevcut ürünleri düzenleme özelliği eklendi
+- **Dinamik Kategori Yönetimi**: Veritabanında kategoriler tablosu oluşturuldu, admin panelinden yeni kategori ve alt kategori eklenebiliyor
+- **Ürünler Sayfası Refaktörü**: Tüm ürünler tek sayfada listeleniyor, sol sidebar ile kategori filtreleme yapılabiliyor
+
+#### Modal ve Deep Linking
+- **Modal Kapatma Butonu**: Ürün detay modalında her zaman görünür kapatma (X) butonu eklendi
+- **Deep Linking**: Ürün detay modalı açıldığında URL güncelleniyor (`/urunler?id=123`), paylaşılabilir linkler oluşturulabiliyor
+- **Paylaş Butonu**: Modal içinde ürün linkini kopyalama/paylaşma özelliği eklendi
+
+#### Blog Yönetimi
+- **Manuel Blog Ekleme**: Admin panelinde ürün bağlantısı olmadan bağımsız blog yazısı oluşturma özelliği eklendi
+- **Blog Düzenleme**: Mevcut blog yazılarını düzenleme imkanı
+
+#### SEO ve Adres Güncellemeleri
+- **Yeni Adres**: Tüm sayfalarda adres "Dumlupınar Mahallesi, Fikirtepe, Kadıköy/İstanbul" olarak güncellendi
+- **Footer SEO**: Footer'a SEO anahtar kelimeleri eklendi
+- **Google Maps**: İletişim sayfasında harita koordinatları güncellendi
+
+#### Performans İyileştirmeleri
+- **Lazy Loading**: Görsel carousel'de lazy loading ve preloading eklendi
+- **Loading State**: Görseller yüklenirken loading animasyonu gösteriliyor
+
+### Teknik Değişiklikler
+
+#### Veritabanı
+- `categories` tablosu eklendi (id, name, slug, parentId, isActive, createdAt, updatedAt)
+- `blog_posts` tablosuna `isManual` ve `source` alanları eklendi
+
+#### API Endpoints (tRPC)
+- `products.update` - Ürün güncelleme
+- `categories.list` - Kategori listesi
+- `categories.create` - Yeni kategori oluşturma
+- `categories.update` - Kategori güncelleme
+- `categories.delete` - Kategori silme
+- `blog.createManual` - Manuel blog oluşturma
+- `blog.update` - Blog güncelleme
+
+#### Bileşenler
+- `ProductDetailModal`: Deep linking ve kapatma butonu desteği
+- `ProductCard`: URL'den modal açma desteği
+- `ImageCarousel`: Lazy loading ve preloading
+- `Products`: Sidebar filtreleme ile yeniden yazıldı
+- `AdminDashboard`: Ürün düzenleme, kategori yönetimi ve manuel blog ekleme
+
+### Kaldırılan Özellikler
+- `/urunler/mobilya` ve `/urunler/beyaz-esya` ayrı sayfaları kaldırıldı (tek sayfa + filtreleme ile değiştirildi)
+
+---
+
 ## [3.5.0] - 2026-01-15
 
 ### Yeni Özellikler

@@ -78,8 +78,9 @@ const checkAndAddColumn = async (
     `));
     
     // If column doesn't exist, add it
-    const isEmpty = (Array.isArray(result) && result.length === 0) || 
-                    (Array.isArray(result) && Array.isArray(result[0]) && result[0].length === 0);
+    const resultArray = result as unknown as unknown[];
+    const isEmpty = (Array.isArray(resultArray) && resultArray.length === 0) || 
+                    (Array.isArray(resultArray) && Array.isArray(resultArray[0]) && (resultArray[0] as unknown[]).length === 0);
     
     if (isEmpty) {
       await db.execute(sql.raw(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDefinition}`));

@@ -18,7 +18,14 @@ import {
   getBlogPostBySlug,
   getBlogPostById,
   updateBlogPost,
-  deleteBlogPost
+  deleteBlogPost,
+  // v5.0: Category functions
+  createCategory,
+  getCategories,
+  getCategoryById,
+  getCategoryBySlug,
+  updateCategory,
+  deleteCategory,
 } from "./db";
 import { localStoragePut, localStorageDelete } from "./localStorage";
 import { nanoid } from "nanoid";
@@ -185,6 +192,94 @@ export const appRouter = router({
     }),
   }),
 
+  // v5.0: Category Management
+  categories: router({
+    // Public: Get all active categories
+    list: publicProcedure
+      .input(z.object({
+        parentCategory: z.enum(["mobilya", "beyaz_esya"]).optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return await getCategories(input?.parentCategory, true);
+      }),
+
+    // Admin: Get all categories (including inactive)
+    adminList: adminProcedure
+      .input(z.object({
+        parentCategory: z.enum(["mobilya", "beyaz_esya"]).optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return await getCategories(input?.parentCategory, false);
+      }),
+
+    // Admin: Create category
+    create: adminProcedure
+      .input(z.object({
+        name: z.string().min(1, "Kategori adı gerekli"),
+        parentCategory: z.enum(["mobilya", "beyaz_esya"]),
+        sortOrder: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const slug = input.name
+          .toLowerCase()
+          .replace(/ğ/g, 'g')
+          .replace(/ü/g, 'u')
+          .replace(/ş/g, 's')
+          .replace(/ı/g, 'i')
+          .replace(/ö/g, 'o')
+          .replace(/ç/g, 'c')
+          .replace(/[^a-z0-9]+/g, '_')
+          .replace(/^_+|_+$/g, '');
+
+        return await createCategory({
+          name: input.name,
+          slug,
+          parentCategory: input.parentCategory,
+          sortOrder: input.sortOrder || 0,
+        });
+      }),
+
+    // Admin: Update category
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().min(1).optional(),
+        isActive: z.boolean().optional(),
+        sortOrder: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, isActive, ...data } = input;
+        
+        const updateData: Record<string, unknown> = { ...data };
+        if (isActive !== undefined) {
+          updateData.isActive = isActive ? 1 : 0;
+        }
+        
+        // Update slug if name changed
+        if (data.name) {
+          updateData.slug = data.name
+            .toLowerCase()
+            .replace(/ğ/g, 'g')
+            .replace(/ü/g, 'u')
+            .replace(/ş/g, 's')
+            .replace(/ı/g, 'i')
+            .replace(/ö/g, 'o')
+            .replace(/ç/g, 'c')
+            .replace(/[^a-z0-9]+/g, '_')
+            .replace(/^_+|_+$/g, '');
+        }
+
+        return await updateCategory(id, updateData);
+      }),
+
+    // Admin: Delete category
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await deleteCategory(input.id);
+      }),
+  }),
+
   products: router({
     // Public: Get all active products
     list: publicProcedure
@@ -304,12 +399,19 @@ export const appRouter = router({
           url: z.string(),
           key: z.string(),
         })).optional(),
+        // v5.0: Allow clearing description
+        clearDescription: z.boolean().optional(),
       }))
       .mutation(async ({ input }) => {
-        const { id, imageBase64, imageMimeType, images, existingImages, ...data } = input;
+        const { id, imageBase64, imageMimeType, images, existingImages, clearDescription, ...data } = input;
         
         let updateData: Record<string, unknown> = { ...data };
         let productImages: ProductImage[] = existingImages || [];
+
+        // v5.0: Handle description clearing
+        if (clearDescription) {
+          updateData.description = null;
+        }
 
         // Handle new multiple images upload (v4.0)
         if (images && images.length > 0) {
@@ -448,26 +550,41 @@ export const appRouter = router({
       return await getBlogPosts(false);
     }),
 
-    // Admin: Create blog post
+    // Admin: Create blog post (v5.0: supports manual creation with image upload)
     create: adminProcedure
       .input(z.object({
         title: z.string().min(1, "Başlık gerekli"),
         content: z.string().min(1, "İçerik gerekli"),
         excerpt: z.string().optional(),
-        coverImage: z.string().optional(),
+        coverImage: z.string().optional(), // URL
+        coverImageBase64: z.string().optional(), // v5.0: Base64 image upload
+        coverImageMimeType: z.string().optional(),
         isPublished: z.boolean().optional(),
         productId: z.number().optional(),
       }))
       .mutation(async ({ input }) => {
         const slug = createSlug(input.title);
         
+        let coverImage = input.coverImage || null;
+        let coverImageKey: string | null = null;
+
+        // v5.0: Handle image upload for manual blog posts
+        if (input.coverImageBase64 && input.coverImageMimeType) {
+          const buffer = Buffer.from(input.coverImageBase64, 'base64');
+          const result = await localStoragePut(buffer, input.coverImageMimeType, "blog");
+          coverImage = result.url;
+          coverImageKey = result.key;
+        }
+        
         return await createBlogPost({
           title: input.title,
           slug,
           content: input.content,
           excerpt: input.excerpt || null,
-          coverImage: input.coverImage || null,
+          coverImage,
+          coverImageKey,
           isPublished: input.isPublished !== false ? 1 : 0,
+          isManual: 1, // v5.0: Mark as manual post
           productId: input.productId || null,
         });
       }),
@@ -506,11 +623,12 @@ export const appRouter = router({
           excerpt: input.excerpt || null,
           coverImage: finalCoverImage,
           isPublished: 1, // Auto-publish from webhook
+          isManual: 0, // v5.0: Mark as n8n automated post
           productId: input.productId || null,
         });
       }),
 
-    // Admin: Update blog post
+    // Admin: Update blog post (v5.0: supports image upload)
     update: adminProcedure
       .input(z.object({
         id: z.number(),
@@ -518,14 +636,30 @@ export const appRouter = router({
         content: z.string().optional(),
         excerpt: z.string().optional(),
         coverImage: z.string().optional(),
+        coverImageBase64: z.string().optional(), // v5.0: Base64 image upload
+        coverImageMimeType: z.string().optional(),
         isPublished: z.boolean().optional(),
       }))
       .mutation(async ({ input }) => {
-        const { id, isPublished, ...data } = input;
+        const { id, isPublished, coverImageBase64, coverImageMimeType, ...data } = input;
         
         const updateData: Record<string, unknown> = { ...data };
         if (isPublished !== undefined) {
           updateData.isPublished = isPublished ? 1 : 0;
+        }
+
+        // v5.0: Handle image upload
+        if (coverImageBase64 && coverImageMimeType) {
+          // Delete old image if exists
+          const existingPost = await getBlogPostById(id);
+          if (existingPost?.coverImageKey) {
+            await localStorageDelete(existingPost.coverImageKey);
+          }
+
+          const buffer = Buffer.from(coverImageBase64, 'base64');
+          const result = await localStoragePut(buffer, coverImageMimeType, "blog");
+          updateData.coverImage = result.url;
+          updateData.coverImageKey = result.key;
         }
 
         return await updateBlogPost(id, updateData);
@@ -535,6 +669,11 @@ export const appRouter = router({
     delete: adminProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
+        // v5.0: Delete cover image if exists
+        const post = await getBlogPostById(input.id);
+        if (post?.coverImageKey) {
+          await localStorageDelete(post.coverImageKey);
+        }
         return await deleteBlogPost(input.id);
       }),
   }),

@@ -1,10 +1,12 @@
 import { Link } from "wouter";
-import { Phone, Mail, MapPin, MessageCircle } from "lucide-react";
+import { Phone, Mail, MapPin, MessageCircle, ExternalLink } from "lucide-react";
 
 const PHONE_NUMBER = "+905393160007";
 const PHONE_DISPLAY = "+90 539 316 00 07";
 const EMAIL = "spotcudukkani@gmail.com";
-const ADDRESS = "Özbey Caddesi No: 59, Fikirtepe, Kadıköy/İstanbul";
+// v5.0: Updated address
+const ADDRESS = "Dumlupınar Mahallesi, Fikirtepe, Kadıköy/İstanbul";
+const GOOGLE_MAPS_URL = "https://maps.google.com/?q=Dumlupınar+Mahallesi+Fikirtepe+Kadıköy+İstanbul";
 const FACEBOOK_URL = "https://facebook.com/ikincielesyadudullu";
 const INSTAGRAM_URL = "https://instagram.com/spotcudukkani.comm";
 
@@ -12,10 +14,20 @@ const quickLinks = [
   { href: "/", label: "Anasayfa" },
   { href: "/hakkimizda", label: "Hakkımızda" },
   { href: "/urunler", label: "Ürünlerimiz" },
-  { href: "/urunler/mobilya", label: "2.El Mobilya" },
-  { href: "/urunler/beyaz-esya", label: "2.El Beyaz Eşya" },
+  { href: "/urunler?category=mobilya", label: "2.El Mobilya" },
+  { href: "/urunler?category=beyaz_esya", label: "2.El Beyaz Eşya" },
   { href: "/blog", label: "Blog" },
   { href: "/iletisim", label: "İletişim" },
+];
+
+// v5.0: SEO keywords for footer
+const seoKeywords = [
+  "Fikirtepe Spotçu",
+  "Kadıköy İkinci El",
+  "2.El Mobilya",
+  "2.El Beyaz Eşya",
+  "Spot Eşya",
+  "İkinci El Eşya",
 ];
 
 export default function Footer() {
@@ -122,9 +134,19 @@ export default function Footer() {
                   <span className="text-base lg:text-lg">{EMAIL}</span>
                 </a>
               </li>
-              <li className="flex items-start gap-3 text-gray-400">
-                <MapPin className="w-5 h-5 lg:w-6 lg:h-6 mt-0.5 text-[#FFD300] flex-shrink-0" />
-                <span className="text-base lg:text-lg">{ADDRESS}</span>
+              <li>
+                <a
+                  href={GOOGLE_MAPS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-start gap-3 text-gray-400 hover:text-[#FFD300] transition-colors group"
+                >
+                  <MapPin className="w-5 h-5 lg:w-6 lg:h-6 mt-0.5 text-[#FFD300] flex-shrink-0" />
+                  <span className="text-base lg:text-lg">
+                    {ADDRESS}
+                    <ExternalLink className="w-3 h-3 inline-block ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </span>
+                </a>
               </li>
             </ul>
           </div>
@@ -150,6 +172,22 @@ export default function Footer() {
         </div>
       </div>
 
+      {/* v5.0: SEO Keywords Section */}
+      <div className="border-t border-white/5">
+        <div className="container py-6">
+          <div className="flex flex-wrap justify-center gap-3">
+            {seoKeywords.map((keyword) => (
+              <span
+                key={keyword}
+                className="text-xs text-gray-500 bg-white/5 px-3 py-1.5 rounded-full"
+              >
+                {keyword}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* Bottom Bar */}
       <div className="border-t border-white/10">
         <div className="container py-5 lg:py-6">
@@ -158,7 +196,7 @@ export default function Footer() {
               © {currentYear} Spotçu Dükkanı. Tüm hakları saklıdır.
             </p>
             <p className="text-gray-500 text-sm lg:text-base">
-              Kadıköy Fikirtepe - İstanbul
+              Kadıköy Fikirtepe - İstanbul | İkinci El Mobilya & Beyaz Eşya
             </p>
           </div>
         </div>

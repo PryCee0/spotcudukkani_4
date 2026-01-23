@@ -19,6 +19,23 @@ export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
 /**
+ * v5.0: Dynamic categories table for admin-managed subcategories
+ */
+export const categories = mysqlTable("categories", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  slug: varchar("slug", { length: 100 }).notNull().unique(),
+  parentCategory: mysqlEnum("parentCategory", ["mobilya", "beyaz_esya"]).notNull(),
+  isActive: int("isActive").default(1).notNull(),
+  sortOrder: int("sortOrder").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Category = typeof categories.$inferSelect;
+export type InsertCategory = typeof categories.$inferInsert;
+
+/**
  * Image type for product gallery
  */
 export interface ProductImage {
@@ -52,6 +69,7 @@ export type InsertProduct = typeof products.$inferInsert;
 
 /**
  * Blog posts table for AI-generated content
+ * v5.0: Added isManual field to distinguish manual posts from n8n automation
  */
 export const blogPosts = mysqlTable("blog_posts", {
   id: int("id").autoincrement().primaryKey(),
@@ -60,7 +78,9 @@ export const blogPosts = mysqlTable("blog_posts", {
   content: text("content").notNull(),
   excerpt: text("excerpt"),
   coverImage: text("coverImage"),
+  coverImageKey: varchar("coverImageKey", { length: 512 }),
   isPublished: int("isPublished").default(1).notNull(),
+  isManual: int("isManual").default(0).notNull(), // v5.0: 1 for manual, 0 for n8n
   productId: int("productId"), // İlişkili ürün (opsiyonel)
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
