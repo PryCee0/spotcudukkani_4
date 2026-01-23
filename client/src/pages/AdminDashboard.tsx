@@ -586,8 +586,8 @@ export default function AdminDashboard() {
     );
   }
 
-  // Product form component (shared between add and edit)
-  const ProductForm = ({ isEdit = false }: { isEdit?: boolean }) => (
+  // Product form JSX - inline olarak kullanılacak (focus kaybını önlemek için)
+  const renderProductForm = (isEdit: boolean = false) => (
     <form onSubmit={isEdit ? handleEditSubmit : handleSubmit} className="space-y-4">
       {/* v4.0: Multiple Image Upload Dropzone */}
       <div>
@@ -810,6 +810,12 @@ export default function AdminDashboard() {
     </form>
   );
 
+  // Add dialog form JSX
+  const addProductFormJSX = renderProductForm(false);
+  
+  // Edit dialog form JSX
+  const editProductFormJSX = renderProductForm(true);
+
   return (
     <div className="min-h-screen bg-[#F9F8F4]">
       {/* Header */}
@@ -949,7 +955,7 @@ export default function AdminDashboard() {
                   <DialogHeader>
                     <DialogTitle>Yeni Ürün Ekle</DialogTitle>
                   </DialogHeader>
-                  <ProductForm />
+                  {addProductFormJSX}
                 </DialogContent>
               </Dialog>
             </div>
@@ -966,7 +972,7 @@ export default function AdminDashboard() {
                 <DialogHeader>
                   <DialogTitle>Ürünü Düzenle</DialogTitle>
                 </DialogHeader>
-                <ProductForm isEdit />
+                {editProductFormJSX}
               </DialogContent>
             </Dialog>
 
