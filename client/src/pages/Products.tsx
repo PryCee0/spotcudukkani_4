@@ -277,7 +277,7 @@ export default function Products() {
           <div className="flex flex-col lg:flex-row gap-8">
             {/* Desktop Sidebar */}
             <aside className="hidden lg:block w-72 flex-shrink-0">
-              <div className="sticky top-24 bg-card rounded-2xl border border-border/50 p-6">
+              <div className="sticky top-24 bg-card rounded-2xl border border-border/50 p-6 max-h-[calc(100vh-8rem)] overflow-y-auto">
                 <h3 className="font-bold text-foreground mb-4 text-lg">Kategoriler</h3>
                 <SidebarContent />
               </div>

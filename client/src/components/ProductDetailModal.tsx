@@ -223,7 +223,7 @@ export default function ProductDetailModal({
                 </div>
                 <div>
                   <p className="font-medium text-[#2F2F2F]">Kadıköy Fikirtepe</p>
-                  <p className="text-sm">Özbey Caddesi No: 59, Kadıköy/İstanbul</p>
+                  <p className="text-sm">Özbey caddesi no 59, 34773 Fikirtepe Kadıköy/İstanbul</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 text-[#2F2F2F]/70">

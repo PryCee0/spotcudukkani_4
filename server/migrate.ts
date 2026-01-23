@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS products (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 `;
 
+// v5.0: Updated blog_posts table with coverImageKey and isManual fields
 const CREATE_BLOG_POSTS_TABLE = `
 CREATE TABLE IF NOT EXISTS blog_posts (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -51,8 +52,24 @@ CREATE TABLE IF NOT EXISTS blog_posts (
   content TEXT NOT NULL,
   excerpt TEXT,
   coverImage TEXT,
+  coverImageKey VARCHAR(512),
   isPublished INT NOT NULL DEFAULT 1,
+  isManual INT NOT NULL DEFAULT 0,
   productId INT,
+  createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+`;
+
+// v5.0: Categories table for dynamic subcategories
+const CREATE_CATEGORIES_TABLE = `
+CREATE TABLE IF NOT EXISTS categories (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  slug VARCHAR(100) NOT NULL UNIQUE,
+  parentCategory ENUM('mobilya', 'beyaz_esya') NOT NULL,
+  isActive INT NOT NULL DEFAULT 1,
+  sortOrder INT NOT NULL DEFAULT 0,
   createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -121,11 +138,21 @@ export async function runMigrations(): Promise<void> {
     await db.execute(sql.raw(CREATE_BLOG_POSTS_TABLE));
     console.log("[Migration] ✓ blog_posts table ready");
 
+    // v5.0: Create categories table
+    await db.execute(sql.raw(CREATE_CATEGORIES_TABLE));
+    console.log("[Migration] ✓ categories table ready");
+
     // Add subCategory column if it doesn't exist (for existing installations)
     await checkAndAddColumn(db, 'products', 'subCategory', 'VARCHAR(100) DEFAULT NULL');
 
     // v4.0: Add images column if it doesn't exist (for existing installations)
     await checkAndAddColumn(db, 'products', 'images', 'JSON DEFAULT NULL');
+
+    // v5.0: Add coverImageKey column to blog_posts if it doesn't exist
+    await checkAndAddColumn(db, 'blog_posts', 'coverImageKey', 'VARCHAR(512) DEFAULT NULL');
+
+    // v5.0: Add isManual column to blog_posts if it doesn't exist
+    await checkAndAddColumn(db, 'blog_posts', 'isManual', 'INT NOT NULL DEFAULT 0');
 
     console.log("[Migration] All migrations completed successfully");
   } catch (error) {

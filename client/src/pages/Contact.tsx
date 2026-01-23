@@ -6,13 +6,13 @@ import { Card, CardContent } from "@/components/ui/card";
 const PHONE_NUMBER = "+905393160007";
 const PHONE_DISPLAY = "+90 539 316 00 07";
 const EMAIL = "spotcudukkani@gmail.com";
-// v5.0: Updated address
-const ADDRESS = "Dumlupınar Mahallesi, Fikirtepe, Kadıköy/İstanbul";
+// v5.0: Updated address - Kurumsal Standart
+const ADDRESS = "Özbey caddesi no 59, 34773 Fikirtepe Kadıköy/İstanbul (Fikirtepe metrobüs çıkışı)";
 const FACEBOOK_URL = "https://facebook.com/ikincielesyadudullu";
 const INSTAGRAM_URL = "https://instagram.com/spotcudukkani.comm";
 
-// v5.0: Updated coordinates for Dumlupınar Mahallesi
-const GOOGLE_MAPS_EMBED = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3011.5!2d29.047!3d40.995!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDDCsDU5JzQyLjAiTiAyOcKwMDInNDkuMiJF!5e0!3m2!1str!2str!4v1705500000000";
+// v5.0: Updated coordinates for Özbey Caddesi No 59
+const GOOGLE_MAPS_EMBED = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3011.5!2d29.047!3d40.995!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zÖzbey+Caddesi+No+59+Fikirtepe!5e0!3m2!1str!2str!4v1705500000000";
 
 const contactInfo = [
   {
@@ -48,8 +48,8 @@ export default function Contact() {
   const whatsappLink = `https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent("Merhaba, bilgi almak istiyorum.")}`;
   const phoneLink = `tel:${PHONE_NUMBER}`;
   
-  // v5.0: Google Maps yol tarifi linki - Dumlupınar Mahallesi
-  const directionsLink = `https://www.google.com/maps/dir/?api=1&destination=Dumlupınar+Mahallesi+Fikirtepe+Kadıköy+İstanbul`;
+  // v5.0: Google Maps yol tarifi linki - Özbey Caddesi
+  const directionsLink = `https://www.google.com/maps/dir/?api=1&destination=Özbey+Caddesi+No+59+Fikirtepe+Kadıköy+İstanbul`;
 
   return (
     <Layout>
@@ -243,7 +243,7 @@ export default function Contact() {
                   allowFullScreen
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
-                  title="Spotçu Dükkanı Konum - Dumlupınar Mahallesi, Fikirtepe, Kadıköy"
+                  title="Spotçu Dükkanı Konum - Özbey Caddesi No 59, Fikirtepe, Kadıköy"
                 />
               </div>
               {/* v5.0: Harita altı bilgi */}

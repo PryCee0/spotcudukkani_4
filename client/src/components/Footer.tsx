@@ -4,9 +4,9 @@ import { Phone, Mail, MapPin, MessageCircle, ExternalLink } from "lucide-react";
 const PHONE_NUMBER = "+905393160007";
 const PHONE_DISPLAY = "+90 539 316 00 07";
 const EMAIL = "spotcudukkani@gmail.com";
-// v5.0: Updated address
-const ADDRESS = "Dumlupınar Mahallesi, Fikirtepe, Kadıköy/İstanbul";
-const GOOGLE_MAPS_URL = "https://maps.google.com/?q=Dumlupınar+Mahallesi+Fikirtepe+Kadıköy+İstanbul";
+// v5.0: Updated address - Kurumsal Standart
+const ADDRESS = "Özbey caddesi no 59, 34773 Fikirtepe Kadıköy/İstanbul (Fikirtepe metrobüs çıkışı)";
+const GOOGLE_MAPS_URL = "https://maps.google.com/?q=Özbey+Caddesi+No+59+Fikirtepe+Kadıköy+İstanbul";
 const FACEBOOK_URL = "https://facebook.com/ikincielesyadudullu";
 const INSTAGRAM_URL = "https://instagram.com/spotcudukkani.comm";
 
