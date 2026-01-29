@@ -8,7 +8,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
-import { ensureUploadDir } from "../localStorage";
+import { ensureUploadDir, getUploadDirPath } from "../localStorage";
 import { runMigrations } from "../migrate";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -72,21 +72,38 @@ async function startServer() {
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   
-  // v4.5: Serve uploaded files from multiple locations for compatibility
-  // Priority: 1) dist/public/uploads (production build), 2) public/uploads (development/fallback)
+  /**
+   * v5.1: Dynamic upload directory serving
+   * 
+   * UPLOAD_DIR environment variable support for persistent storage:
+   * - When UPLOAD_DIR is set, files are stored in that directory (e.g., /data/uploads)
+   * - When not set, uses default ./public/uploads
+   * 
+   * This allows Docker volumes to persist uploads across container rebuilds.
+   */
+  const uploadDir = getUploadDirPath();
+  
+  // Primary: Serve from UPLOAD_DIR (or default public/uploads)
+  app.use("/uploads", express.static(uploadDir));
+  console.log(`[Uploads] Primary serving from: ${uploadDir}`);
+  
+  // Fallback paths for compatibility
   const distUploadsPath = process.env.NODE_ENV === "development"
     ? path.resolve(import.meta.dirname, "../..", "dist", "public", "uploads")
     : path.resolve(import.meta.dirname, "public", "uploads");
   const rootUploadsPath = path.resolve(process.cwd(), "public", "uploads");
   
-  // Serve from dist first (production), then fallback to root public
-  if (fs.existsSync(distUploadsPath)) {
+  // Serve from dist (production build assets)
+  if (fs.existsSync(distUploadsPath) && distUploadsPath !== uploadDir) {
     app.use("/uploads", express.static(distUploadsPath));
-    console.log(`[Uploads] Serving from: ${distUploadsPath}`);
+    console.log(`[Uploads] Fallback serving from: ${distUploadsPath}`);
   }
-  // Always also serve from root public/uploads (for runtime uploads and fallback)
-  app.use("/uploads", express.static(rootUploadsPath));
-  console.log(`[Uploads] Fallback serving from: ${rootUploadsPath}`);
+  
+  // Serve from root public/uploads (development/legacy)
+  if (rootUploadsPath !== uploadDir) {
+    app.use("/uploads", express.static(rootUploadsPath));
+    console.log(`[Uploads] Fallback serving from: ${rootUploadsPath}`);
+  }
   
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
@@ -125,6 +142,10 @@ async function startServer() {
 
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
+    console.log(`[Storage] Upload directory: ${uploadDir}`);
+    if (process.env.UPLOAD_DIR) {
+      console.log(`[Storage] Using persistent storage from UPLOAD_DIR environment variable`);
+    }
   });
 }
 

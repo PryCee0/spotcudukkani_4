@@ -100,6 +100,8 @@ export default function AdminDashboard() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isBlogDialogOpen, setIsBlogDialogOpen] = useState(false);
+  const [isBlogEditDialogOpen, setIsBlogEditDialogOpen] = useState(false);
+  const [editingBlog, setEditingBlog] = useState<any>(null);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("products");
   const [editingProduct, setEditingProduct] = useState<any>(null);
@@ -120,6 +122,16 @@ export default function AdminDashboard() {
   });
   const [blogCoverImage, setBlogCoverImage] = useState<ImagePreview | null>(null);
   const blogFileInputRef = useRef<HTMLInputElement>(null);
+  
+  // v5.1: Blog edit state
+  const [editBlog, setEditBlog] = useState({
+    title: "",
+    content: "",
+    excerpt: "",
+    isPublished: true,
+  });
+  const [editBlogCoverImage, setEditBlogCoverImage] = useState<ImagePreview | null>(null);
+  const editBlogFileInputRef = useRef<HTMLInputElement>(null);
 
   // v5.0: Category state
   const [newCategory, setNewCategory] = useState({
@@ -235,6 +247,21 @@ export default function AdminDashboard() {
     },
   });
 
+  // v5.1: Blog update mutation
+  const updateBlogMutation = trpc.blog.update.useMutation({
+    onSuccess: () => {
+      toast.success("Blog yazısı başarıyla güncellendi!");
+      utils.blog.adminList.invalidate();
+      utils.blog.list.invalidate();
+      setIsBlogEditDialogOpen(false);
+      setEditingBlog(null);
+      resetEditBlogForm();
+    },
+    onError: (error) => {
+      toast.error(`Hata: ${error.message}`);
+    },
+  });
+
   // v5.0: Category mutations
   const createCategoryMutation = trpc.categories.create.useMutation({
     onSuccess: () => {
@@ -288,6 +315,83 @@ export default function AdminDashboard() {
     if (blogFileInputRef.current) {
       blogFileInputRef.current.value = "";
     }
+  };
+
+  // v5.1: Reset edit blog form
+  const resetEditBlogForm = () => {
+    setEditBlog({ title: "", content: "", excerpt: "", isPublished: true });
+    setEditBlogCoverImage(null);
+    if (editBlogFileInputRef.current) {
+      editBlogFileInputRef.current.value = "";
+    }
+  };
+
+  // v5.1: Open blog edit dialog
+  const openBlogEditDialog = (post: any) => {
+    setEditingBlog(post);
+    setEditBlog({
+      title: post.title,
+      content: post.content,
+      excerpt: post.excerpt || "",
+      isPublished: post.isPublished === 1,
+    });
+    if (post.coverImage) {
+      setEditBlogCoverImage({
+        id: `blog-existing-${post.id}`,
+        preview: post.coverImage,
+        isExisting: true,
+      });
+    } else {
+      setEditBlogCoverImage(null);
+    }
+    setIsBlogEditDialogOpen(true);
+  };
+
+  // v5.1: Handle edit blog cover image
+  const handleEditBlogImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setEditBlogCoverImage({
+          id: `blog-edit-${Date.now()}`,
+          file,
+          preview: reader.result as string,
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+    if (editBlogFileInputRef.current) {
+      editBlogFileInputRef.current.value = "";
+    }
+  };
+
+  // v5.1: Handle blog edit submit
+  const handleBlogEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingBlog || !editBlog.title || !editBlog.content) {
+      toast.error("Başlık ve içerik gerekli");
+      return;
+    }
+
+    let coverImageBase64: string | undefined;
+    let coverImageMimeType: string | undefined;
+
+    // Only send new image if it's not an existing one
+    if (editBlogCoverImage?.file && !editBlogCoverImage.isExisting) {
+      coverImageBase64 = editBlogCoverImage.preview.split(",")[1];
+      coverImageMimeType = editBlogCoverImage.file.type;
+    }
+
+    updateBlogMutation.mutate({
+      id: editingBlog.id,
+      title: editBlog.title,
+      content: editBlog.content,
+      excerpt: editBlog.excerpt || undefined,
+      isPublished: editBlog.isPublished,
+      coverImageBase64,
+      coverImageMimeType,
+    });
   };
 
   // v5.0: Get subcategories (dynamic + default)
@@ -1312,10 +1416,20 @@ export default function AdminDashboard() {
 
                         {/* Actions */}
                         <div className="flex items-center gap-2">
-                          <Link href={`/blog/${post.slug}`} className="flex-1">
-                            <Button variant="outline" size="sm" className="w-full gap-1">
+                          {/* v5.1: Edit button */}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openBlogEditDialog(post)}
+                            className="flex-1 gap-1"
+                            title="Düzenle"
+                          >
+                            <Edit className="w-4 h-4" />
+                            Düzenle
+                          </Button>
+                          <Link href={`/blog/${post.slug}`}>
+                            <Button variant="outline" size="sm" className="gap-1">
                               <Eye className="w-4 h-4" />
-                              Görüntüle
                             </Button>
                           </Link>
                           <AlertDialog>
@@ -1369,6 +1483,146 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
             )}
+
+            {/* v5.1: Blog Edit Dialog */}
+            <Dialog open={isBlogEditDialogOpen} onOpenChange={(open) => {
+              setIsBlogEditDialogOpen(open);
+              if (!open) {
+                setEditingBlog(null);
+                resetEditBlogForm();
+              }
+            }}>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Blog Yazısını Düzenle</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleBlogEditSubmit} className="space-y-4">
+                  {/* Cover Image */}
+                  <div>
+                    <Label>Kapak Fotoğrafı</Label>
+                    <div className="mt-2">
+                      <input
+                        ref={editBlogFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleEditBlogImageSelect}
+                        className="hidden"
+                        id="edit-blog-image-upload"
+                      />
+                      {editBlogCoverImage ? (
+                        <div className="relative aspect-video rounded-lg overflow-hidden bg-[#F9F8F4]">
+                          <img
+                            src={editBlogCoverImage.preview}
+                            alt="Kapak"
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => editBlogFileInputRef.current?.click()}
+                            >
+                              Değiştir
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => setEditBlogCoverImage(null)}
+                            >
+                              Kaldır
+                            </Button>
+                          </div>
+                          {editBlogCoverImage.isExisting && (
+                            <div className="absolute bottom-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                              Mevcut
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <label
+                          htmlFor="edit-blog-image-upload"
+                          className="flex flex-col items-center justify-center aspect-video rounded-lg border-2 border-dashed border-[#2F2F2F]/20 hover:border-[#FFD300] bg-[#F9F8F4] cursor-pointer transition-colors"
+                        >
+                          <Upload className="w-8 h-8 text-[#2F2F2F]/40 mb-2" />
+                          <span className="text-sm text-[#2F2F2F]/60">Kapak fotoğrafı seçin</span>
+                        </label>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Title */}
+                  <div>
+                    <Label>Başlık</Label>
+                    <Input
+                      value={editBlog.title}
+                      onChange={(e) => setEditBlog({ ...editBlog, title: e.target.value })}
+                      placeholder="Blog yazısı başlığı"
+                      required
+                      className="mt-1.5"
+                    />
+                  </div>
+
+                  {/* Excerpt */}
+                  <div>
+                    <Label>Özet (Opsiyonel)</Label>
+                    <Textarea
+                      value={editBlog.excerpt}
+                      onChange={(e) => setEditBlog({ ...editBlog, excerpt: e.target.value })}
+                      placeholder="Kısa özet (liste görünümünde gösterilir)"
+                      rows={2}
+                      className="mt-1.5"
+                    />
+                  </div>
+
+                  {/* Content */}
+                  <div>
+                    <Label>İçerik</Label>
+                    <Textarea
+                      value={editBlog.content}
+                      onChange={(e) => setEditBlog({ ...editBlog, content: e.target.value })}
+                      placeholder="Blog yazısı içeriği... HTML veya Markdown kullanabilirsiniz."
+                      rows={10}
+                      required
+                      className="mt-1.5 font-mono text-sm"
+                    />
+                  </div>
+
+                  {/* Published Toggle */}
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="edit-blog-published"
+                      checked={editBlog.isPublished}
+                      onChange={(e) => setEditBlog({ ...editBlog, isPublished: e.target.checked })}
+                      className="w-4 h-4 rounded border-[#2F2F2F]/20"
+                    />
+                    <Label htmlFor="edit-blog-published" className="cursor-pointer">
+                      Yayınla
+                    </Label>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={updateBlogMutation.isPending}
+                    className="w-full bg-[#FFD300] text-[#2F2F2F] hover:bg-[#FFD300]/90"
+                  >
+                    {updateBlogMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Güncelleniyor...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4 mr-2" />
+                        Değişiklikleri Kaydet
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
           </TabsContent>
 
           {/* v5.0: Categories Tab */}

@@ -29,7 +29,7 @@ export default function TrustCards() {
             Spotçu Dükkanı
           </h2>
           <p className="text-lg md:text-xl lg:text-2xl text-[#2F2F2F]/70 max-w-3xl mx-auto leading-relaxed">
-            Kadıköy Fikirtepe'de 2012'den beri güvenilir ikinci el mobilya ve beyaz eşya alım satım merkezi
+            Kadıköy Fikirtepede beyaz eşya ve mobilya alım satım dükkanı
           </p>
         </div>
 
