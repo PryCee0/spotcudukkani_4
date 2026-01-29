@@ -27,23 +27,26 @@ export default function Header() {
       <div className="border-b border-border/50 bg-[#F9F8F4]">
         <div className="container py-3 lg:py-4">
           <div className="flex items-center justify-between">
-            {/* v5.1: Logo with new 600x150px image - Retina optimized */}
+            {/* v5.1 FIX: Logo + "Spotçu Dükkanı" text restored */}
             <Link href="/" className="flex items-center gap-3">
               <img 
-                src="/logo.png" 
+                src="/logo.png?v=2" 
                 alt="Spotçu Dükkanı Logo" 
-                className="h-12 md:h-14 lg:h-16 w-auto object-contain"
-                style={{ maxWidth: '200px' }}
+                className="h-10 md:h-12 lg:h-14 w-auto object-contain"
+                style={{ maxWidth: '160px' }}
                 onError={(e) => {
                   // Fallback to uploads folder if root fails
                   const target = e.currentTarget;
                   if (!target.src.includes('/uploads/')) {
-                    target.src = '/uploads/logo.png';
+                    target.src = '/uploads/logo.png?v=2';
                   } else {
                     target.style.display = 'none';
                   }
                 }}
               />
+              <span className="text-xl md:text-2xl font-bold text-[#2F2F2F]">
+                Spotçu <span className="text-[#FFD300]">Dükkanı</span>
+              </span>
             </Link>
 
             {/* Contact Info - Desktop - Büyütülmüş */}
