@@ -1,4 +1,4 @@
-import { eq, desc, and, asc } from "drizzle-orm";
+import { eq, desc, and, asc, sql, sum } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, products, InsertProduct, Product, categories, InsertCategory, Category, blogPosts, InsertBlogPost, BlogPost } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -329,6 +329,49 @@ export async function toggleProductActive(id: number) {
   if (!product) return null;
 
   return await updateProduct(id, { isActive: product.isActive === 1 ? 0 : 1 });
+}
+
+// v6.0: Increment product view count
+export async function incrementViewCount(id: number) {
+  const db = await getDb();
+  if (!db) return;
+
+  try {
+    await db.update(products)
+      .set({ viewCount: sql`${products.viewCount} + 1` })
+      .where(eq(products.id, id));
+  } catch (error) {
+    console.error("[Database] Failed to increment view count:", error);
+  }
+}
+
+// v6.0: Get top viewed products
+export async function getTopViewedProducts(limit = 5) {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    return await db.select().from(products)
+      .orderBy(desc(products.viewCount))
+      .limit(limit);
+  } catch (error) {
+    console.error("[Database] Failed to get top viewed products:", error);
+    return [];
+  }
+}
+
+// v6.0: Get total view count across all products
+export async function getTotalViewCount() {
+  const db = await getDb();
+  if (!db) return 0;
+
+  try {
+    const result = await db.select({ total: sum(products.viewCount) }).from(products);
+    return Number(result[0]?.total || 0);
+  } catch (error) {
+    console.error("[Database] Failed to get total view count:", error);
+    return 0;
+  }
 }
 
 // ==================== Blog Post Queries ====================

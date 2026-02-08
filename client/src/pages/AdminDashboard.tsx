@@ -57,6 +57,9 @@ import {
   Edit,
   FolderTree,
   Save,
+  BarChart3,
+  TrendingUp,
+  MousePointerClick,
 } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
@@ -169,6 +172,16 @@ export default function AdminDashboard() {
 
   // v5.0: Categories query
   const { data: dynamicCategories } = trpc.categories.adminList.useQuery(
+    undefined,
+    { enabled: sessionData?.isLoggedIn === true }
+  );
+
+  // v6.0: Top viewed products & total views
+  const { data: topViewedProducts } = trpc.products.topViewed.useQuery(
+    { limit: 5 },
+    { enabled: sessionData?.isLoggedIn === true }
+  );
+  const { data: totalViewsData } = trpc.products.totalViews.useQuery(
     undefined,
     { enabled: sessionData?.isLoggedIn === true }
   );
@@ -921,7 +934,7 @@ export default function AdminDashboard() {
   const editProductFormJSX = renderProductForm(true);
 
   return (
-    <div className="min-h-screen bg-[#F9F8F4]">
+    <div className="min-h-screen bg-[#F9F8F4] admin-panel">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white border-b border-[#2F2F2F]/10 shadow-sm">
         <div className="container py-4">
@@ -932,7 +945,7 @@ export default function AdminDashboard() {
                   Spotçu <span className="text-[#FFD300]">Dükkanı</span>
                 </span>
               </Link>
-              <Badge className="bg-[#FFD300] text-[#2F2F2F]">Admin Panel v5.0</Badge>
+              <Badge className="bg-[#FFD300] text-[#2F2F2F]">Admin Panel v6.0</Badge>
             </div>
             <div className="flex items-center gap-2">
               <Link href="/">
@@ -1022,6 +1035,62 @@ export default function AdminDashboard() {
                   {dynamicCategories?.length || 0}
                 </p>
               </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* v6.0: Top Viewed Products & Total Views */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
+          {/* Total Click Count */}
+          <Card className="bg-white border-none shadow-md">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <MousePointerClick className="w-5 h-5 text-[#FFD300]" />
+                Toplam Ürün Tıklanma Sayısı
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-4xl font-bold text-[#2F2F2F]">
+                {totalViewsData?.total?.toLocaleString('tr-TR') || 0}
+              </p>
+              <p className="text-sm text-[#2F2F2F]/60 mt-1">Tüm ürünlerin toplam görüntülenme sayısı</p>
+            </CardContent>
+          </Card>
+
+          {/* Top 5 Viewed Products */}
+          <Card className="bg-white border-none shadow-md">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-[#FFD300]" />
+                En Çok Görüntülenen 5 Ürün
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {topViewedProducts && topViewedProducts.length > 0 ? (
+                <div className="space-y-3">
+                  {topViewedProducts.map((product, index) => (
+                    <div key={product.id} className="flex items-center gap-3">
+                      <span className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${
+                        index === 0 ? 'bg-[#FFD300] text-[#2F2F2F]' :
+                        index === 1 ? 'bg-gray-300 text-[#2F2F2F]' :
+                        index === 2 ? 'bg-amber-600 text-white' :
+                        'bg-gray-100 text-[#2F2F2F]'
+                      }`}>
+                        {index + 1}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-[#2F2F2F] truncate">{product.title}</p>
+                      </div>
+                      <div className="flex items-center gap-1 text-sm text-[#2F2F2F]/70">
+                        <Eye className="w-4 h-4" />
+                        <span className="font-semibold">{product.viewCount}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-[#2F2F2F]/60">Henüz görüntüleme verisi yok</p>
+              )}
             </CardContent>
           </Card>
         </div>

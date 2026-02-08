@@ -54,8 +54,9 @@ export default function Products() {
   
   const [selectedCategory, setSelectedCategory] = useState<"mobilya" | "beyaz_esya" | null>(urlCategory);
   const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(urlSubCategory);
-  const [mobilyaOpen, setMobilyaOpen] = useState(urlCategory === "mobilya" || !urlCategory);
-  const [beyazEsyaOpen, setBeyazEsyaOpen] = useState(urlCategory === "beyaz_esya" || !urlCategory);
+  // v6.0: Alt kategoriler varsayılan olarak kapalı - sadece ilgili kategori seçiliyse açık
+  const [mobilyaOpen, setMobilyaOpen] = useState(urlCategory === "mobilya");
+  const [beyazEsyaOpen, setBeyazEsyaOpen] = useState(urlCategory === "beyaz_esya");
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   // Fetch products
@@ -108,6 +109,14 @@ export default function Products() {
     } else {
       setSelectedCategory(category);
       setSelectedSubCategory(null);
+      // v6.0: Ana kategoriye tıklayınca alt kategorileri aç
+      if (category === "mobilya") {
+        setMobilyaOpen(true);
+        setBeyazEsyaOpen(false);
+      } else {
+        setBeyazEsyaOpen(true);
+        setMobilyaOpen(false);
+      }
     }
   };
 
@@ -265,7 +274,7 @@ export default function Products() {
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">Ürünlerimiz</h1>
           <p className="text-gray-300 max-w-2xl">
-            Kadıköy Fikirtepe'de ikinci el mobilya ve beyaz eşya kategorilerimizi keşfedin. Tüm ürünlerimiz
+            İstanbul genelinde ikinci el mobilya ve beyaz eşya kategorilerimizi keşfedin. Tüm ürünlerimiz
             kontrol edilmiş ve temizlenmiş olarak satışa sunulmaktadır.
           </p>
         </div>

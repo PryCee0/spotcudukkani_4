@@ -54,6 +54,7 @@ function LazyImage({
             isLoaded ? "opacity-100" : "opacity-0"
           )}
           loading="lazy"
+          decoding="async"
           onLoad={() => {
             setIsLoaded(true);
             onLoad?.();
@@ -195,7 +196,7 @@ export default function ImageCarousel({
         >
           <LazyImage
             src={imageList[currentIndex]}
-            alt={`${title} - Fotoğraf ${currentIndex + 1}`}
+            alt={`${title} - Spotçu Dükkanı İstanbul ikinci el eşya fotoğraf ${currentIndex + 1}`}
             className="w-full h-full object-cover transition-transform duration-300"
           />
           
@@ -283,9 +284,10 @@ export default function ImageCarousel({
             >
               <img
                 src={url}
-                alt={`${title} - Küçük resim ${index + 1}`}
+                alt={`${title} - Spotçu Dükkanı küçük resim ${index + 1}`}
                 className="w-full h-full object-cover"
                 loading="lazy"
+                decoding="async"
               />
             </button>
           ))}
@@ -326,7 +328,7 @@ export default function ImageCarousel({
           >
             <img
               src={imageList[currentIndex]}
-              alt={`${title} - Fotoğraf ${currentIndex + 1}`}
+              alt={`${title} - Spotçu Dükkanı İstanbul ikinci el eşya fotoğraf ${currentIndex + 1}`}
               className="max-w-full max-h-[90vh] object-contain"
             />
           </div>
@@ -380,9 +382,10 @@ export default function ImageCarousel({
                 >
                   <img
                     src={url}
-                    alt={`${title} - Küçük resim ${index + 1}`}
+                    alt={`${title} - Spotçu Dükkanı küçük resim ${index + 1}`}
                     className="w-full h-full object-cover"
                     loading="lazy"
+                    decoding="async"
                   />
                 </button>
               ))}

@@ -130,6 +130,25 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* v6.0: Admin panel mobile fix - prevent accidental text selection on touch */
+  .admin-panel {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .admin-panel input,
+  .admin-panel textarea,
+  .admin-panel [contenteditable="true"],
+  .admin-panel .selectable-text {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  /* v6.0: Prevent long-press context menu on mobile for admin buttons */
+  .admin-panel button,
+  .admin-panel [role="button"] {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
   [type="button"]:not(:disabled),

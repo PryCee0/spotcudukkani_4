@@ -13,6 +13,10 @@ import {
   deleteProduct,
   toggleProductFeatured,
   toggleProductActive,
+  // v6.0: View count functions
+  incrementViewCount,
+  getTopViewedProducts,
+  getTotalViewCount,
   createBlogPost,
   getBlogPosts,
   getBlogPostBySlug,
@@ -308,6 +312,26 @@ export const appRouter = router({
         }
         return product;
       }),
+
+    // v6.0: Increment view count when product detail is opened
+    incrementView: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await incrementViewCount(input.id);
+        return { success: true };
+      }),
+
+    // v6.0: Admin - Get top viewed products
+    topViewed: adminProcedure
+      .input(z.object({ limit: z.number().optional() }).optional())
+      .query(async ({ input }) => {
+        return await getTopViewedProducts(input?.limit ?? 5);
+      }),
+
+    // v6.0: Admin - Get total view count
+    totalViews: adminProcedure.query(async () => {
+      return { total: await getTotalViewCount() };
+    }),
 
     // Admin: Get all products (including inactive)
     adminList: adminProcedure.query(async () => {

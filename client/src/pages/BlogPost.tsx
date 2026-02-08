@@ -7,6 +7,7 @@ import { Calendar, ArrowLeft, Share2 } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { Streamdown } from "streamdown";
+import { BlogPostSchema } from "@/components/SEO";
 
 export default function BlogPost() {
   const params = useParams<{ slug: string }>();
@@ -72,6 +73,15 @@ export default function BlogPost() {
 
   return (
     <Layout>
+      {/* v6.0: BlogPosting JSON-LD Schema */}
+      <BlogPostSchema
+        title={post.title}
+        description={post.excerpt}
+        image={post.coverImage}
+        datePublished={new Date(post.createdAt).toISOString()}
+        dateModified={new Date(post.updatedAt || post.createdAt).toISOString()}
+        url={`https://spotcudukkani.com/blog/${post.slug}`}
+      />
       <article className="py-12 lg:py-20">
         <div className="container">
           <div className="max-w-4xl mx-auto">
@@ -88,8 +98,9 @@ export default function BlogPost() {
               <div className="aspect-video rounded-2xl overflow-hidden mb-8 shadow-lg">
                 <img
                   src={post.coverImage}
-                  alt={post.title}
+                  alt={`${post.title} - Spotçu Dükkanı Blog İstanbul ikinci el eşya rehberi`}
                   className="w-full h-full object-cover"
+                  loading="eager"
                 />
               </div>
             )}

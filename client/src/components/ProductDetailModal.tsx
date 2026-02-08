@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { MessageCircle, X, Phone, MapPin, Clock, Share2, Check, Copy } from "lucide-react";
 import ImageCarousel from "./ImageCarousel";
 import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
+import { ProductSchema } from "./SEO";
 
 const PHONE_NUMBER = "+905393160007";
 const PHONE_DISPLAY = "+90 539 316 00 07";
@@ -57,21 +59,42 @@ export default function ProductDetailModal({
 }: ProductDetailModalProps) {
   const [copied, setCopied] = useState(false);
 
-  // v5.0: Update URL when modal opens (deep linking)
+  // v6.0: Increment view count mutation
+  const incrementViewMutation = trpc.products.incrementView.useMutation();
+
+  // v6.0: Update URL when modal opens (deep linking) - pushState for proper back button
   useEffect(() => {
     if (enableDeepLink && isOpen && product?.id) {
       const currentUrl = new URL(window.location.href);
       currentUrl.searchParams.set("id", product.id.toString());
-      window.history.replaceState(null, "", currentUrl.toString());
+      window.history.pushState({ productId: product.id }, "", currentUrl.toString());
+    }
+    // v6.0: Increment view count when modal opens
+    if (isOpen && product?.id) {
+      incrementViewMutation.mutate({ id: product.id });
     }
   }, [isOpen, product?.id, enableDeepLink]);
 
-  // v5.0: Remove product ID from URL when modal closes
+  // v6.0: Handle browser back button to close modal
+  useEffect(() => {
+    if (!enableDeepLink || !isOpen) return;
+
+    const handlePopState = () => {
+      onClose();
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [isOpen, enableDeepLink, onClose]);
+
+  // v6.0: Remove product ID from URL when modal closes
   const handleClose = () => {
     if (enableDeepLink) {
       const currentUrl = new URL(window.location.href);
-      currentUrl.searchParams.delete("id");
-      window.history.replaceState(null, "", currentUrl.toString());
+      if (currentUrl.searchParams.has("id")) {
+        currentUrl.searchParams.delete("id");
+        window.history.replaceState(null, "", currentUrl.toString());
+      }
     }
     onClose();
   };
@@ -134,6 +157,16 @@ export default function ProductDetailModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      {/* v6.0: Product JSON-LD Schema for SEO */}
+      {isOpen && product && (
+        <ProductSchema
+          name={product.title}
+          description={product.description}
+          image={product.images?.[0]?.url || product.imageUrl}
+          category={categoryLabel}
+          url={getShareUrl()}
+        />
+      )}
       <DialogContent className="max-w-3xl max-h-[95vh] overflow-y-auto p-0 gap-0">
         {/* v5.0: Explicit close button - always visible */}
         <Button

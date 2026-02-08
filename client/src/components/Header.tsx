@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 const PHONE_NUMBER = "+905393160007";
 const PHONE_DISPLAY = "+90 539 316 00 07";
-const LOCATION = "Kadıköy Fikirtepe/İstanbul";
+const LOCATION = "İstanbul Avrupa/Anadolu";
 
 const navLinks = [
   { href: "/", label: "Anasayfa" },

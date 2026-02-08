@@ -9,22 +9,22 @@ const PHONE_NUMBER = "+905393160007";
 const slides = [
   {
     id: 1,
-    title: "Eviniz İçin Uygun Fiyatlı Çözümler",
-    subtitle: "Kadıköy Fikirtepe'de kaliteli ve temiz spot eşya fırsatları.",
+    title: "İstanbul'un Her Köşesine Güvenle",
+    subtitle: "İkinci El Eşyada Şeffaf Hizmet.",
     bgGradient: "from-[#2F2F2F]/95 to-[#2F2F2F]/80",
     bgImage: "/uploads/slider1.webp",
   },
   {
     id: 2,
-    title: "2.El eşyalarınızı değerinde alıyoruz.",
-    subtitle: "Fikirtepe'de anında nakit ödeme ve yerinden alım hizmeti.",
+    title: "Değerinde Alım, Hızlı Satım",
+    subtitle: "Tüm İlçelere Ücretsiz Ekspertiz.",
     bgGradient: "from-[#2F2F2F]/95 to-[#2F2F2F]/80",
     bgImage: "/uploads/slider2.webp",
   },
   {
     id: 3,
-    title: "spotcudukkani.com",
-    subtitle: "Kadıköy Fikirtepe'de Güvenilir 2.EL Eşya Alım Satım Merkezi",
+    title: "Fikirtepe'den Tüm İstanbul'a",
+    subtitle: "Kaliteli Spot Eşya Kapınızda.",
     bgGradient: "from-[#2F2F2F]/95 to-[#2F2F2F]/80",
     bgImage: "/uploads/slider3.webp",
   },
@@ -61,11 +61,13 @@ function HeroSlider() {
           {/* Background Image - LCP optimized */}
           <img
             src={slide.bgImage}
-            alt=""
+            alt={`${slide.title} - Spotçu Dükkanı İstanbul ikinci el eşya`}
             className="absolute inset-0 w-full h-full object-cover"
             loading={index === 0 ? "eager" : "lazy"}
             fetchPriority={index === 0 ? "high" : "auto"}
             decoding={index === 0 ? "sync" : "async"}
+            width={1920}
+            height={850}
           />
           {/* Overlay */}
           <div className={`absolute inset-0 bg-gradient-to-r ${slide.bgGradient}`} />

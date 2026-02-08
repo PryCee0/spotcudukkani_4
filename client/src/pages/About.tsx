@@ -173,7 +173,7 @@ export default function About() {
               İkinci el eşya sektöründe güvenin ve kalitenin adresi olmak, müşterilerimize
               her zaman en iyi hizmeti sunmak ve sektörde örnek alınan bir marka olmaya
               devam etmek. Sürdürülebilir tüketim anlayışıyla çevreye katkıda bulunurken,
-              Kadıköy Fikirtepe ve çevresindeki binlerce aileye uygun fiyatlı çözümler sunmak en büyük hedefimizdir.
+              İstanbul'un Avrupa ve Anadolu yakasındaki binlerce aileye uygun fiyatlı çözümler sunmak en büyük hedefimizdir.
             </p>
           </div>
         </div>

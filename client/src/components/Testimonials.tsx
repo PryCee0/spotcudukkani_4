@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight, Quote } from "lucide-react";
+import ScrollAnimation from "./ScrollAnimation";
 
 const testimonials = [
   {
@@ -98,71 +99,75 @@ export default function Testimonials() {
     <section className="py-16 md:py-20 bg-background">
       <div className="container">
         {/* Section Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
-            Müşterilerimiz Ne Diyor?
-          </h2>
-          <p className="text-muted-foreground">
-            Binlerce mutlu müşterimizden bazı yorumlar
-          </p>
-        </div>
+        <ScrollAnimation direction="up">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
+              Müşterilerimiz Ne Diyor?
+            </h2>
+            <p className="text-muted-foreground">
+              Binlerce mutlu müşterimizden bazı yorumlar
+            </p>
+          </div>
+        </ScrollAnimation>
 
         {/* Testimonials Slider */}
-        <div className="relative">
-          {/* Navigation Buttons */}
-          <button
-            onClick={prevSlide}
-            className="absolute -left-4 md:-left-6 top-1/2 -translate-y-1/2 z-10 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white shadow-lg border border-border flex items-center justify-center hover:bg-muted transition-colors"
-            aria-label="Önceki yorum"
-          >
-            <ChevronLeft className="w-5 h-5 text-foreground" />
-          </button>
-          <button
-            onClick={nextSlide}
-            className="absolute -right-4 md:-right-6 top-1/2 -translate-y-1/2 z-10 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white shadow-lg border border-border flex items-center justify-center hover:bg-muted transition-colors"
-            aria-label="Sonraki yorum"
-          >
-            <ChevronRight className="w-5 h-5 text-foreground" />
-          </button>
-
-          {/* Slider Container */}
-          <div className="overflow-hidden mx-4 md:mx-8">
-            <div
-              className="flex transition-transform duration-500 ease-out"
-              style={{
-                transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)`,
-              }}
+        <ScrollAnimation direction="up" delay={0.2}>
+          <div className="relative">
+            {/* Navigation Buttons */}
+            <button
+              onClick={prevSlide}
+              className="absolute -left-4 md:-left-6 top-1/2 -translate-y-1/2 z-10 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white shadow-lg border border-border flex items-center justify-center hover:bg-muted transition-colors"
+              aria-label="Önceki yorum"
             >
-              {testimonials.map((testimonial) => (
-                <div
-                  key={testimonial.id}
-                  className="flex-shrink-0 px-2 md:px-3"
-                  style={{ width: `${100 / itemsPerView}%` }}
-                >
-                  <Card className="h-full bg-card border-border/50 hover:border-primary/30 transition-colors">
-                    <CardContent className="p-6">
-                      <Quote className="w-8 h-8 text-primary/30 mb-4" />
-                      <p className="text-foreground mb-4 leading-relaxed">
-                        "{testimonial.text}"
-                      </p>
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <span className="text-primary font-semibold">
-                            {testimonial.name.charAt(0)}
-                          </span>
+              <ChevronLeft className="w-5 h-5 text-foreground" />
+            </button>
+            <button
+              onClick={nextSlide}
+              className="absolute -right-4 md:-right-6 top-1/2 -translate-y-1/2 z-10 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white shadow-lg border border-border flex items-center justify-center hover:bg-muted transition-colors"
+              aria-label="Sonraki yorum"
+            >
+              <ChevronRight className="w-5 h-5 text-foreground" />
+            </button>
+
+            {/* Slider Container */}
+            <div className="overflow-hidden mx-4 md:mx-8">
+              <div
+                className="flex transition-transform duration-500 ease-out"
+                style={{
+                  transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)`,
+                }}
+              >
+                {testimonials.map((testimonial) => (
+                  <div
+                    key={testimonial.id}
+                    className="flex-shrink-0 px-2 md:px-3"
+                    style={{ width: `${100 / itemsPerView}%` }}
+                  >
+                    <Card className="h-full bg-card border-border/50 hover:border-primary/30 transition-colors">
+                      <CardContent className="p-6">
+                        <Quote className="w-8 h-8 text-primary/30 mb-4" />
+                        <p className="text-foreground mb-4 leading-relaxed">
+                          "{testimonial.text}"
+                        </p>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                            <span className="text-primary font-semibold">
+                              {testimonial.name.charAt(0)}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground">{testimonial.name}</p>
+                            <p className="text-sm text-muted-foreground">{testimonial.location}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium text-foreground">{testimonial.name}</p>
-                          <p className="text-sm text-muted-foreground">{testimonial.location}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              ))}
+                      </CardContent>
+                    </Card>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        </ScrollAnimation>
 
         {/* Dots */}
         <div className="flex justify-center gap-2 mt-8">

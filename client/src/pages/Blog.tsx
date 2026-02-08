@@ -74,8 +74,10 @@ export default function Blog() {
                       <div className="aspect-video overflow-hidden">
                         <img
                           src={post.coverImage}
-                          alt={post.title}
+                          alt={`${post.title} - Spotçu Dükkanı Blog İstanbul ikinci el eşya`}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          loading="lazy"
+                          decoding="async"
                         />
                       </div>
                     ) : (

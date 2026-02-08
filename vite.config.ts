@@ -24,6 +24,20 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    // v6.0: Build optimizations
+    target: "es2020",
+    cssMinify: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom"],
+          router: ["wouter"],
+          ui: ["@radix-ui/react-dialog", "@radix-ui/react-tabs", "@radix-ui/react-collapsible"],
+          animation: ["framer-motion"],
+          trpc: ["@trpc/client", "@trpc/react-query", "@tanstack/react-query"],
+        },
+      },
+    },
   },
   server: {
     host: true,

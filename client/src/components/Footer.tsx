@@ -22,12 +22,16 @@ const quickLinks = [
 
 // v5.0: SEO keywords for footer
 const seoKeywords = [
+  "İstanbul Spotçu",
   "Fikirtepe Spotçu",
   "Kadıköy İkinci El",
   "2.El Mobilya",
   "2.El Beyaz Eşya",
   "Spot Eşya",
   "İkinci El Eşya",
+  "İstanbul İkinci El",
+  "Anadolu Yakası Spotçu",
+  "Avrupa Yakası Spotçu",
 ];
 
 export default function Footer() {
@@ -55,7 +59,7 @@ export default function Footer() {
               </span>
             </Link>
             <p className="text-gray-400 text-base lg:text-lg leading-relaxed mb-6 lg:mb-8">
-              2012 yılında Küçükyalı Spotçular Çarşısı'nda sektöre başlayan firmamız, Anadolu Yakası'nın farklı ilçelerinde faaliyet gösterdikten sonra 2021 yılından itibaren Kadıköy Fikirtepe'de hizmet vermeye devam etmektedir.
+              2012 yılında Küçükyalı Spotçular Çarşısı'nda sektöre başlayan firmamız, İstanbul'un Avrupa ve Anadolu yakasında hizmet vererek tüm ilçelere ulaşmaktadır.
             </p>
             {/* Social Media */}
             <div className="flex gap-3">
@@ -196,7 +200,7 @@ export default function Footer() {
               © {currentYear} Spotçu Dükkanı. Tüm hakları saklıdır.
             </p>
             <p className="text-gray-500 text-sm lg:text-base">
-              Kadıköy Fikirtepe - İstanbul | İkinci El Mobilya & Beyaz Eşya
+              İstanbul Avrupa & Anadolu Yakası | İkinci El Mobilya & Beyaz Eşya
             </p>
           </div>
         </div>

@@ -58,6 +58,8 @@ export const products = mysqlTable("products", {
   imageKey: varchar("imageKey", { length: 512 }),
   // v4.0: Multiple images support (JSON array of {url, key} objects)
   images: json("images").$type<ProductImage[]>(),
+  // v6.0: View count for product statistics
+  viewCount: int("viewCount").default(0).notNull(),
   isActive: int("isActive").default(1).notNull(),
   isFeatured: int("isFeatured").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
