@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useSearch, useLocation } from "wouter";
 import Layout from "@/components/Layout";
 import ProductCard from "@/components/ProductCard";
+import ProductDetailModal from "@/components/ProductDetailModal";
 import { trpc } from "@/lib/trpc";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -59,17 +60,63 @@ export default function Products() {
   const [beyazEsyaOpen, setBeyazEsyaOpen] = useState(urlCategory === "beyaz_esya");
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
+  // v6.0: Deep linking state - Products seviyesinde yönetiliyor
+  const [deepLinkModalOpen, setDeepLinkModalOpen] = useState(false);
+  const [deepLinkProductId, setDeepLinkProductId] = useState<number | null>(
+    urlProductId ? parseInt(urlProductId, 10) : null
+  );
+
   // Fetch products
   const { data: products, isLoading } = trpc.products.list.useQuery({
     category: selectedCategory || undefined,
     subCategory: selectedSubCategory || undefined,
   });
 
+  // v6.0: Deep linking - URL'de id varsa tRPC ile ürünü çek
+  const { data: deepLinkProduct, isLoading: isDeepLinkLoading } = trpc.products.byId.useQuery(
+    { id: deepLinkProductId! },
+    { enabled: deepLinkProductId !== null && deepLinkProductId > 0 }
+  );
+
   // v5.0: Fetch dynamic categories
   const { data: dynamicCategories } = trpc.categories.list.useQuery();
 
+  // v6.0: Deep link ürünü geldiğinde modalı otomatik aç
+  useEffect(() => {
+    if (deepLinkProduct && deepLinkProductId !== null) {
+      setDeepLinkModalOpen(true);
+    }
+  }, [deepLinkProduct, deepLinkProductId]);
+
+  // v6.0: Sayfa ilk yüklendiğinde URL'deki id'yi kontrol et
+  useEffect(() => {
+    if (urlProductId) {
+      const parsedId = parseInt(urlProductId, 10);
+      if (!isNaN(parsedId) && parsedId > 0) {
+        setDeepLinkProductId(parsedId);
+      }
+    }
+  }, []); // Sadece mount'ta çalışır
+
+  // v6.0: Deep link modalı kapatıldığında state ve URL temizle
+  const handleDeepLinkModalClose = () => {
+    setDeepLinkModalOpen(false);
+    setDeepLinkProductId(null);
+    // URL'den id parametresini temizle
+    const currentUrl = new URL(window.location.href);
+    if (currentUrl.searchParams.has("id")) {
+      currentUrl.searchParams.delete("id");
+      const cleanUrl = currentUrl.searchParams.toString();
+      const newUrl = cleanUrl ? `/urunler?${cleanUrl}` : "/urunler";
+      window.history.replaceState(null, "", newUrl);
+    }
+  };
+
   // Update URL when filters change
   useEffect(() => {
+    // Deep link aktifken filtre URL'sini güncelleme
+    if (deepLinkModalOpen || deepLinkProductId) return;
+
     const params = new URLSearchParams();
     if (selectedCategory) params.set("category", selectedCategory);
     if (selectedSubCategory) params.set("sub", selectedSubCategory);
@@ -81,7 +128,7 @@ export default function Products() {
     if (window.location.pathname + window.location.search !== newUrl) {
       window.history.replaceState(null, "", newUrl);
     }
-  }, [selectedCategory, selectedSubCategory]);
+  }, [selectedCategory, selectedSubCategory, deepLinkModalOpen, deepLinkProductId]);
 
   // v5.0: Get subcategories (dynamic + default)
   const getSubCategories = (category: "mobilya" | "beyaz_esya") => {
@@ -260,6 +307,17 @@ export default function Products() {
     </div>
   );
 
+  // v6.0: Deep link ürün verisini modal formatına dönüştür
+  const deepLinkProductData = deepLinkProduct ? {
+    id: deepLinkProduct.id,
+    title: deepLinkProduct.title,
+    description: deepLinkProduct.description,
+    category: deepLinkProduct.category as "mobilya" | "beyaz_esya",
+    subCategory: deepLinkProduct.subCategory,
+    imageUrl: deepLinkProduct.imageUrl,
+    images: deepLinkProduct.images as any,
+  } : null;
+
   return (
     <Layout>
       {/* Page Header */}
@@ -400,6 +458,14 @@ export default function Products() {
           </div>
         </div>
       </section>
+
+      {/* v6.0: Deep Link Modal - Products seviyesinde, sayfa yüklenince URL'den id okuyup açılır */}
+      <ProductDetailModal
+        isOpen={deepLinkModalOpen}
+        onClose={handleDeepLinkModalClose}
+        product={deepLinkProductData}
+        enableDeepLink={true}
+      />
     </Layout>
   );
 }
