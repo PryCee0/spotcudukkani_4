@@ -135,17 +135,28 @@
     -webkit-user-select: none;
     user-select: none;
   }
-  .admin-panel input,
+  /* v7.0: Metin giriş alanlarında tüm seçim özelliklerini tam aç */
+  .admin-panel input[type="text"],
+  .admin-panel input[type="search"],
+  .admin-panel input[type="email"],
+  .admin-panel input[type="password"],
+  .admin-panel input[type="url"],
+  .admin-panel input[type="tel"],
+  .admin-panel input[type="number"],
+  .admin-panel input:not([type]),
   .admin-panel textarea,
   .admin-panel [contenteditable="true"],
-  .admin-panel .selectable-text {
+  .admin-panel .selectable-text,
+  .admin-panel [data-slot="input"],
+  .admin-panel [data-slot="textarea"] {
     -webkit-user-select: text;
     user-select: text;
+    -webkit-touch-callout: default;
+    touch-action: auto;
   }
-  /* v6.0: Prevent long-press context menu on mobile for admin buttons */
+  /* v7.0: Butonlarda sadece user-select kapat, touch-callout dokunma */
   .admin-panel button,
   .admin-panel [role="button"] {
-    -webkit-touch-callout: none;
     -webkit-user-select: none;
     user-select: none;
   }

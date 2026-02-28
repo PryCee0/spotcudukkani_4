@@ -2,6 +2,46 @@ import fs from "fs";
 import path from "path";
 import { nanoid } from "nanoid";
 
+// v7.0: Security - Maximum file size (10MB)
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+// v7.0: Security - Allowed MIME types whitelist
+const ALLOWED_MIME_TYPES = new Set([
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'image/bmp',
+]);
+
+// v7.0: Security - Magic bytes signatures for image validation
+const MAGIC_BYTES: Array<{ mime: string; bytes: number[] }> = [
+  { mime: 'image/jpeg', bytes: [0xFF, 0xD8, 0xFF] },
+  { mime: 'image/png', bytes: [0x89, 0x50, 0x4E, 0x47] },
+  { mime: 'image/gif', bytes: [0x47, 0x49, 0x46] },
+  { mime: 'image/webp', bytes: [0x52, 0x49, 0x46, 0x46] }, // RIFF header
+  { mime: 'image/bmp', bytes: [0x42, 0x4D] },
+];
+
+/**
+ * v7.0: Validate MIME type against whitelist
+ */
+export function validateImageMimeType(mimeType: string): boolean {
+  return ALLOWED_MIME_TYPES.has(mimeType.toLowerCase());
+}
+
+/**
+ * v7.0: Validate file buffer magic bytes match an image format
+ */
+export function validateMagicBytes(buffer: Buffer): boolean {
+  if (buffer.length < 4) return false;
+
+  return MAGIC_BYTES.some(({ bytes }) =>
+    bytes.every((byte, index) => buffer[index] === byte)
+  );
+}
+
 /**
  * v5.1: Dynamic upload directory with environment variable support
  * 
@@ -16,13 +56,13 @@ import { nanoid } from "nanoid";
 // Get upload directory from environment or use default
 function getUploadDir(): string {
   const envUploadDir = process.env.UPLOAD_DIR;
-  
+
   if (envUploadDir) {
     // Use absolute path from environment variable
     console.log(`[Storage] Using UPLOAD_DIR from environment: ${envUploadDir}`);
     return path.resolve(envUploadDir);
   }
-  
+
   // Default: relative to project root (development mode)
   return path.resolve(process.cwd(), "public", "uploads");
 }
@@ -51,7 +91,7 @@ function getPublicUrlPath(): string {
  */
 export function ensureUploadDir(): void {
   const uploadDir = getUploadDirCached();
-  
+
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
     console.log(`[Storage] Created upload directory: ${uploadDir}`);
@@ -80,6 +120,21 @@ export async function localStoragePut(
   mimeType: string,
   prefix: string = "uploads"
 ): Promise<{ key: string; url: string }> {
+  // v7.0: Security - Validate file size
+  if (buffer.length > MAX_FILE_SIZE) {
+    throw new Error(`File too large: ${(buffer.length / 1024 / 1024).toFixed(1)}MB exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit`);
+  }
+
+  // v7.0: Security - Validate MIME type whitelist
+  if (!validateImageMimeType(mimeType)) {
+    throw new Error(`Invalid file type: ${mimeType}. Only image files are allowed.`);
+  }
+
+  // v7.0: Security - Validate magic bytes
+  if (!validateMagicBytes(buffer)) {
+    throw new Error('File content does not match a valid image format. Upload rejected.');
+  }
+
   // Ensure upload directory exists
   ensureUploadDir();
 
@@ -87,19 +142,19 @@ export async function localStoragePut(
 
   // Get file extension from mime type
   const ext = getExtensionFromMimeType(mimeType);
-  
+
   // Generate unique filename
   const filename = `${prefix}-${nanoid()}.${ext}`;
   const filePath = path.join(uploadDir, filename);
-  
+
   // Write file to disk
   await fs.promises.writeFile(filePath, buffer);
-  
+
   // Return relative URL (served from /uploads/)
   const url = `${getPublicUrlPath()}/${filename}`;
-  
+
   console.log(`[Storage] File saved: ${filePath} -> ${url}`);
-  
+
   return {
     key: filename,
     url,
@@ -114,7 +169,7 @@ export async function localStoragePut(
 export async function localStorageDelete(key: string): Promise<boolean> {
   const uploadDir = getUploadDirCached();
   const filePath = path.join(uploadDir, key);
-  
+
   try {
     if (fs.existsSync(filePath)) {
       await fs.promises.unlink(filePath);
@@ -155,7 +210,7 @@ function getExtensionFromMimeType(mimeType: string): string {
     'image/bmp': 'bmp',
     'image/tiff': 'tiff',
   };
-  
+
   return mimeToExt[mimeType] || mimeType.split("/")[1] || "jpg";
 }
 
@@ -171,26 +226,26 @@ export async function localStorageCopy(
 ): Promise<{ key: string; url: string } | null> {
   const uploadDir = getUploadDirCached();
   const sourcePath = path.join(uploadDir, sourceKey);
-  
+
   if (!fs.existsSync(sourcePath)) {
     console.warn(`[Storage] Source file not found: ${sourcePath}`);
     return null;
   }
-  
+
   // Get extension from source file
   const ext = path.extname(sourceKey).slice(1) || 'jpg';
-  
+
   // Generate new filename
   const newFilename = `${destPrefix}-${nanoid()}.${ext}`;
   const destPath = path.join(uploadDir, newFilename);
-  
+
   // Copy file
   await fs.promises.copyFile(sourcePath, destPath);
-  
+
   const url = `${getPublicUrlPath()}/${newFilename}`;
-  
+
   console.log(`[Storage] File copied: ${sourcePath} -> ${destPath}`);
-  
+
   return {
     key: newFilename,
     url,

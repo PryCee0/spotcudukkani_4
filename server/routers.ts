@@ -4,12 +4,12 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { 
-  createProduct, 
-  getProducts, 
-  getFeaturedProducts, 
-  getProductById, 
-  updateProduct, 
+import {
+  createProduct,
+  getProducts,
+  getFeaturedProducts,
+  getProductById,
+  updateProduct,
   deleteProduct,
   toggleProductFeatured,
   toggleProductActive,
@@ -36,22 +36,32 @@ import { nanoid } from "nanoid";
 import axios from "axios";
 import * as jose from "jose";
 import { ProductImage } from "../drizzle/schema";
+import { randomBytes } from "node:crypto";
 
 // Admin cookie name
 const ADMIN_COOKIE_NAME = "admin_session";
 
-// Admin password from environment
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "spotcu2024";
+// Admin password from environment (REQUIRED)
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+if (!ADMIN_PASSWORD) {
+  console.error("[Security] CRITICAL: ADMIN_PASSWORD environment variable is not set!");
+  // Don't throw in production to avoid crashing existing deployments,
+  // but admin login will be disabled
+}
 
-// JWT secret for admin sessions
+// JWT secret for admin sessions (REQUIRED)
+const JWT_SECRET_VALUE = process.env.JWT_SECRET;
+if (!JWT_SECRET_VALUE) {
+  console.error("[Security] CRITICAL: JWT_SECRET environment variable is not set!");
+}
 const ADMIN_JWT_SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET || "spotcu-admin-secret-key-2024"
+  JWT_SECRET_VALUE || randomBytes(32).toString('hex')
 );
 
 // Verify admin session from cookie
 async function verifyAdminSession(token: string | undefined): Promise<boolean> {
   if (!token) return false;
-  
+
   try {
     const { payload } = await jose.jwtVerify(token, ADMIN_JWT_SECRET);
     return payload.isAdmin === true;
@@ -75,25 +85,28 @@ const adminProcedure = publicProcedure.use(async ({ ctx, next }) => {
   const adminCookie = cookies
     .split(";")
     .find((c: string) => c.trim().startsWith(`${ADMIN_COOKIE_NAME}=`));
-  
+
   const token = adminCookie?.split("=")[1]?.trim();
   const isAdmin = await verifyAdminSession(token);
-  
+
   if (!isAdmin) {
-    throw new TRPCError({ 
-      code: 'UNAUTHORIZED', 
-      message: 'Admin girişi gerekli. Lütfen /admin sayfasından giriş yapın.' 
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+      message: 'Admin girişi gerekli. Lütfen /admin sayfasından giriş yapın.'
     });
   }
-  
+
   return next({ ctx });
 });
 
 // Webhook URL (environment variable'dan alınır)
 const WEBHOOK_URL = process.env.WEBHOOK_URL || null;
 
-// Blog API Key for external webhook access
-const BLOG_API_KEY = process.env.BLOG_API_KEY || "spotcu-blog-api-key-2024";
+// Blog API Key for external webhook access (REQUIRED for webhook)
+const BLOG_API_KEY = process.env.BLOG_API_KEY;
+if (!BLOG_API_KEY) {
+  console.warn("[Security] WARNING: BLOG_API_KEY environment variable is not set. Webhook blog creation will be disabled.");
+}
 
 // Webhook gönderme fonksiyonu
 async function sendWebhook(event: string, data: Record<string, unknown>) {
@@ -140,7 +153,7 @@ const imageUploadSchema = z.object({
 
 export const appRouter = router({
   system: systemRouter,
-  
+
   // Admin authentication
   admin: router({
     // Check if user is logged in as admin
@@ -149,10 +162,10 @@ export const appRouter = router({
       const adminCookie = cookies
         .split(";")
         .find((c: string) => c.trim().startsWith(`${ADMIN_COOKIE_NAME}=`));
-      
+
       const token = adminCookie?.split("=")[1]?.trim();
       const isAdmin = await verifyAdminSession(token);
-      
+
       return { isLoggedIn: isAdmin };
     }),
 
@@ -161,15 +174,15 @@ export const appRouter = router({
       .input(z.object({ password: z.string() }))
       .mutation(async ({ input, ctx }) => {
         if (input.password !== ADMIN_PASSWORD) {
-          throw new TRPCError({ 
-            code: 'UNAUTHORIZED', 
-            message: 'Yanlış şifre' 
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Yanlış şifre'
           });
         }
 
         const token = await createAdminToken();
         const cookieOptions = getSessionCookieOptions(ctx.req);
-        
+
         ctx.res.cookie(ADMIN_COOKIE_NAME, token, {
           ...cookieOptions,
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 gün
@@ -253,12 +266,12 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         const { id, isActive, ...data } = input;
-        
+
         const updateData: Record<string, unknown> = { ...data };
         if (isActive !== undefined) {
           updateData.isActive = isActive ? 1 : 0;
         }
-        
+
         // Update slug if name changed
         if (data.name) {
           updateData.slug = data.name
@@ -428,7 +441,7 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         const { id, imageBase64, imageMimeType, images, existingImages, clearDescription, ...data } = input;
-        
+
         let updateData: Record<string, unknown> = { ...data };
         let productImages: ProductImage[] = existingImages || [];
 
@@ -458,7 +471,7 @@ export const appRouter = router({
           const result = await localStoragePut(buffer, imageMimeType, "products");
           updateData.imageUrl = result.url;
           updateData.imageKey = result.key;
-          
+
           // Add to images array if not already there
           if (!productImages.some(img => img.key === result.key)) {
             productImages.unshift({ url: result.url, key: result.key });
@@ -502,7 +515,7 @@ export const appRouter = router({
 
     // Admin: Delete single image from product (v4.0)
     deleteImage: adminProcedure
-      .input(z.object({ 
+      .input(z.object({
         productId: z.number(),
         imageKey: z.string(),
       }))
@@ -588,7 +601,7 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         const slug = createSlug(input.title);
-        
+
         let coverImage = input.coverImage || null;
         let coverImageKey: string | null = null;
 
@@ -599,7 +612,7 @@ export const appRouter = router({
           coverImage = result.url;
           coverImageKey = result.key;
         }
-        
+
         return await createBlogPost({
           title: input.title,
           slug,
@@ -629,17 +642,17 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         // Verify API key
         if (input.apiKey !== BLOG_API_KEY) {
-          throw new TRPCError({ 
-            code: 'UNAUTHORIZED', 
-            message: 'Geçersiz API anahtarı' 
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Geçersiz API anahtarı'
           });
         }
 
         const slug = createSlug(input.title);
-        
+
         // v4.5: Use coverImage if provided, otherwise fall back to imageUrl
         const finalCoverImage = input.coverImage || input.imageUrl || null;
-        
+
         return await createBlogPost({
           title: input.title,
           slug,
@@ -666,7 +679,7 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         const { id, isPublished, coverImageBase64, coverImageMimeType, ...data } = input;
-        
+
         const updateData: Record<string, unknown> = { ...data };
         if (isPublished !== undefined) {
           updateData.isPublished = isPublished ? 1 : 0;

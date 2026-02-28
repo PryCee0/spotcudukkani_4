@@ -41,14 +41,14 @@ interface ProductCardProps {
   subCategory?: string | null;
 }
 
-export default function ProductCard({ 
-  id, 
-  title, 
-  description, 
-  imageUrl, 
+export default function ProductCard({
+  id,
+  title,
+  description,
+  imageUrl,
   images,
-  category, 
-  subCategory 
+  category,
+  subCategory
 }: ProductCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -62,7 +62,7 @@ export default function ProductCard({
 
   // Get display image (first from images array or fallback to imageUrl)
   const displayImage = images && images.length > 0 ? images[0].url : imageUrl;
-  
+
   // Get image count
   const imageCount = images && images.length > 0 ? images.length : (imageUrl ? 1 : 0);
 
@@ -81,9 +81,13 @@ export default function ProductCard({
     <>
       <Card className="group overflow-hidden bg-white border-none shadow-md hover:shadow-xl transition-all duration-300">
         {/* Product Image - Clickable to open modal */}
-        <div 
+        <div
           className="relative aspect-[4/3] overflow-hidden bg-[#F9F8F4] cursor-pointer"
           onClick={() => setIsModalOpen(true)}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsModalOpen(true); } }}
+          role="button"
+          tabIndex={0}
+          aria-label={`${title} ürün detaylarını görüntüle`}
         >
           {displayImage ? (
             <img
@@ -98,15 +102,14 @@ export default function ProductCard({
               <ImageOff className="w-14 h-14 lg:w-16 lg:h-16 text-[#2F2F2F]/15" />
             </div>
           )}
-          
+
           {/* Badges */}
           <div className="absolute top-4 left-4 flex flex-wrap gap-2">
             <Badge
-              className={`text-sm lg:text-base px-3 lg:px-4 py-1.5 ${
-                category === "mobilya"
+              className={`text-sm lg:text-base px-3 lg:px-4 py-1.5 ${category === "mobilya"
                   ? "bg-[#FFD300] text-[#2F2F2F] hover:bg-[#FFD300]"
                   : "bg-[#2F2F2F] text-white hover:bg-[#2F2F2F]"
-              }`}
+                }`}
             >
               {categoryLabel}
             </Badge>
@@ -138,7 +141,7 @@ export default function ProductCard({
 
         {/* Product Info */}
         <CardContent className="p-5 lg:p-6">
-          <h3 
+          <h3
             className="text-lg lg:text-xl font-bold text-[#2F2F2F] mb-2 lg:mb-3 line-clamp-1 group-hover:text-[#FFD300] transition-colors cursor-pointer"
             onClick={() => setIsModalOpen(true)}
           >
@@ -149,10 +152,10 @@ export default function ProductCard({
               {description}
             </p>
           )}
-          
+
           {/* Action Buttons */}
           <div className="flex gap-2">
-            <Button 
+            <Button
               variant="outline"
               className="flex-1 border-2 border-[#2F2F2F]/20 hover:border-[#FFD300] hover:bg-[#FFD300]/5 text-[#2F2F2F] gap-2 text-base py-3 h-auto"
               onClick={() => setIsModalOpen(true)}
