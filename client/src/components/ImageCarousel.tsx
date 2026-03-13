@@ -82,7 +82,7 @@ export default function ImageCarousel({
   const touchStartRef = useRef<number | null>(null);
   const touchEndRef = useRef<number | null>(null);
   const isDraggingRef = useRef(false);
-  const [dragOffset, setDragOffset] = useState(0);
+  const sliderRef = useRef<HTMLDivElement>(null);
   const isTransitioning = useRef(false);
 
   // Build image array from images or fallback
@@ -160,20 +160,33 @@ export default function ImageCarousel({
     touchEndRef.current = null;
     touchStartRef.current = e.targetTouches[0].clientX;
     isDraggingRef.current = true;
-    setDragOffset(0);
+    if (sliderRef.current) {
+      sliderRef.current.style.transition = 'none';
+      sliderRef.current.style.transform = 'translate3d(0px, 0, 0)';
+    }
   }, []);
 
   const onTouchMove = useCallback((e: React.TouchEvent) => {
     if (!isDraggingRef.current || touchStartRef.current === null) return;
     touchEndRef.current = e.targetTouches[0].clientX;
-    // Visual drag feedback
+    // Visual drag feedback with requestAnimationFrame
     const diff = touchEndRef.current - touchStartRef.current;
-    setDragOffset(Math.max(-80, Math.min(80, diff)));
+    requestAnimationFrame(() => {
+      if (sliderRef.current && isDraggingRef.current) {
+        const offset = Math.max(-80, Math.min(80, diff));
+        sliderRef.current.style.transform = `translate3d(${offset}px, 0, 0)`;
+      }
+    });
   }, []);
 
   const onTouchEnd = useCallback(() => {
     isDraggingRef.current = false;
-    setDragOffset(0);
+    
+    if (sliderRef.current) {
+      sliderRef.current.style.transition = 'transform 0.3s ease-out';
+      sliderRef.current.style.transform = 'translate3d(0px, 0, 0)';
+    }
+
     if (touchStartRef.current === null || touchEndRef.current === null) return;
     
     const distance = touchStartRef.current - touchEndRef.current;
@@ -217,10 +230,10 @@ export default function ImageCarousel({
           onClick={() => !isDraggingRef.current && setIsFullscreen(true)}
         >
           <div
+            ref={sliderRef}
             style={{
-              transform: `translateX(${dragOffset}px)`,
-              transition: dragOffset === 0 ? "transform 0.3s ease-out" : "none",
               willChange: "transform",
+              transform: "translate3d(0px, 0, 0)",
             }}
             className="w-full h-full"
           >

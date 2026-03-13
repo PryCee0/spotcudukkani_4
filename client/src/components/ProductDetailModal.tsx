@@ -179,18 +179,16 @@ export default function ProductDetailModal({
           />
         )}
         <DialogContent aria-describedby={undefined} className="max-w-3xl max-h-[95vh] overflow-y-auto p-0 gap-0">
-          {/* v8.0: Sticky close button - always visible during scroll */}
-          <div className="sticky top-0 z-50 flex justify-end pointer-events-none" style={{ height: 0 }}>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleClose}
-              className="pointer-events-auto mt-3 mr-3 rounded-full bg-white/95 hover:bg-white shadow-md w-10 h-10 border border-gray-200"
-              aria-label="Kapat"
-            >
-              <X className="w-5 h-5" />
-            </Button>
-          </div>
+          {/* v8.0: Absolute close button - outside normal document flow */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleClose}
+            className="absolute top-3 right-3 z-50 rounded-full bg-white/95 hover:bg-white shadow-md w-12 h-12 border border-gray-200"
+            aria-label="Kapat"
+          >
+            <X className="w-6 h-6" />
+          </Button>
 
           {/* Header */}
           <DialogHeader className="sticky top-0 z-10 bg-white border-b border-[#2F2F2F]/10 px-6 py-4">
