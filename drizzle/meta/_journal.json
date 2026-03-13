@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1767638073090,
+      "tag": "0000_regular_spyke",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1767638216395,
+      "tag": "0001_brave_secret_warriors",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1767642134898,
+      "tag": "0002_great_violations",
+      "breakpoints": true
+    }
+  ]
+}
