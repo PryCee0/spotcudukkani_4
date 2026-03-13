@@ -178,7 +178,7 @@ export default function ProductDetailModal({
             url={getShareUrl()}
           />
         )}
-        <DialogContent className="max-w-3xl max-h-[95vh] overflow-y-auto p-0 gap-0 relative">
+        <DialogContent aria-describedby={undefined} className="max-w-3xl max-h-[95vh] overflow-y-auto p-0 gap-0">
           {/* v8.0: Sticky close button - always visible during scroll */}
           <div className="sticky top-0 z-50 flex justify-end pointer-events-none" style={{ height: 0 }}>
             <Button
