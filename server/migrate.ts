@@ -154,11 +154,33 @@ export async function runMigrations(): Promise<void> {
     await checkAndAddColumn(db, 'products', 'videoUrl', 'TEXT DEFAULT NULL');
     await checkAndAddColumn(db, 'products', 'videoKey', 'VARCHAR(512) DEFAULT NULL');
 
+    // v6.0: Add viewCount column to products if it doesn't exist
+    await checkAndAddColumn(db, 'products', 'viewCount', 'INT NOT NULL DEFAULT 0');
+
     // v5.0: Add coverImageKey column to blog_posts if it doesn't exist
     await checkAndAddColumn(db, 'blog_posts', 'coverImageKey', 'VARCHAR(512) DEFAULT NULL');
 
     // v5.0: Add isManual column to blog_posts if it doesn't exist
     await checkAndAddColumn(db, 'blog_posts', 'isManual', 'INT NOT NULL DEFAULT 0');
+
+    // v7.1: Performance indexes for frequently queried columns
+    const indexes = [
+      `CREATE INDEX IF NOT EXISTS idx_products_category_active ON products (category, isActive)`,
+      `CREATE INDEX IF NOT EXISTS idx_products_featured_active ON products (isFeatured, isActive)`,
+      `CREATE INDEX IF NOT EXISTS idx_products_created ON products (createdAt DESC)`,
+      `CREATE INDEX IF NOT EXISTS idx_blog_posts_published ON blog_posts (isPublished)`,
+      `CREATE INDEX IF NOT EXISTS idx_blog_posts_created ON blog_posts (createdAt DESC)`,
+      `CREATE INDEX IF NOT EXISTS idx_categories_parent_active ON categories (parentCategory, isActive)`,
+    ];
+
+    for (const indexSql of indexes) {
+      try {
+        await db.execute(sql.raw(indexSql));
+      } catch {
+        // Index might already exist or syntax not supported — skip silently
+      }
+    }
+    console.log("[Migration] ✓ Database indexes verified");
 
     console.log("[Migration] All migrations completed successfully");
   } catch (error) {

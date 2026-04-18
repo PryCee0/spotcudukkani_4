@@ -96,7 +96,7 @@ export default function Testimonials() {
   }, [nextSlide]);
 
   return (
-    <section className="py-16 md:py-20 bg-background">
+    <section className="py-16 md:py-20 bg-background transition-colors duration-300">
       <div className="container">
         {/* Section Header */}
         <ScrollAnimation direction="up">
@@ -116,14 +116,14 @@ export default function Testimonials() {
             {/* Navigation Buttons */}
             <button
               onClick={prevSlide}
-              className="absolute -left-4 md:-left-6 top-1/2 -translate-y-1/2 z-10 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white shadow-lg border border-border flex items-center justify-center hover:bg-muted transition-colors"
+              className="absolute -left-4 md:-left-6 top-1/2 -translate-y-1/2 z-10 w-10 h-10 md:w-12 md:h-12 rounded-full bg-card shadow-lg border border-border flex items-center justify-center hover:bg-muted transition-colors"
               aria-label="Önceki yorum"
             >
               <ChevronLeft className="w-5 h-5 text-foreground" />
             </button>
             <button
               onClick={nextSlide}
-              className="absolute -right-4 md:-right-6 top-1/2 -translate-y-1/2 z-10 w-10 h-10 md:w-12 md:h-12 rounded-full bg-white shadow-lg border border-border flex items-center justify-center hover:bg-muted transition-colors"
+              className="absolute -right-4 md:-right-6 top-1/2 -translate-y-1/2 z-10 w-10 h-10 md:w-12 md:h-12 rounded-full bg-card shadow-lg border border-border flex items-center justify-center hover:bg-muted transition-colors"
               aria-label="Sonraki yorum"
             >
               <ChevronRight className="w-5 h-5 text-foreground" />

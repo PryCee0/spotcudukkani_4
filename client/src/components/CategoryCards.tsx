@@ -25,14 +25,14 @@ const categoryCards = [
 
 function CategoryCards() {
     return (
-        <section className="py-12 md:py-16 lg:py-20 bg-white">
+        <section className="py-12 md:py-16 lg:py-20 bg-card transition-colors duration-300">
             <div className="container">
                 <ScrollAnimation direction="up">
                     <div className="text-center mb-10 lg:mb-14">
-                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-[#2F2F2F] mb-3 lg:mb-4">
+                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-3 lg:mb-4">
                             Kategoriler
                         </h2>
-                        <p className="text-lg md:text-xl text-[#2F2F2F]/60 max-w-2xl mx-auto">
+                        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
                             Aradığınız ürünü hızlıca bulun
                         </p>
                     </div>

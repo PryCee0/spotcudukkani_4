@@ -45,9 +45,9 @@ function FloatingWhatsApp() {
                         : "opacity-0 translate-y-2 pointer-events-none"
                     }`}
             >
-                <div className="bg-white rounded-xl shadow-xl px-4 py-3 text-sm text-[#2F2F2F] font-medium whitespace-nowrap border border-[#2F2F2F]/10">
+                <div className="bg-card rounded-xl shadow-xl px-4 py-3 text-sm text-foreground font-medium whitespace-nowrap border border-border transition-colors duration-300">
                     💬 Hemen yazın, anında cevap!
-                    <div className="absolute -bottom-1.5 right-6 w-3 h-3 bg-white border-r border-b border-[#2F2F2F]/10 rotate-45" />
+                    <div className="absolute -bottom-1.5 right-6 w-3 h-3 bg-card border-r border-b border-border rotate-45 transition-colors duration-300" />
                 </div>
             </div>
 

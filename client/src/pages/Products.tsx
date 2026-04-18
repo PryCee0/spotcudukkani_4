@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useSearch, useLocation } from "wouter";
 import Layout from "@/components/Layout";
+import { useMetaTags } from "@/components/SEO";
 import ProductCard from "@/components/ProductCard";
 import ProductDetailModal from "@/components/ProductDetailModal";
 import { trpc } from "@/lib/trpc";
@@ -44,6 +45,14 @@ const DEFAULT_SUB_CATEGORIES = {
 };
 
 export default function Products() {
+  useMetaTags({
+    title: "Ürünlerimiz | Spotçu Dükkanı - İkinci El Mobilya & Beyaz Eşya",
+    description: "İstanbul genelinde ikinci el mobilya ve beyaz eşya ürünlerimizi keşfedin. Kontrol edilmiş, temizlenmiş ve uygun fiyatlı 2.el eşyalar Spotçu Dükkanı'nda.",
+    "og:title": "Ürünlerimiz | Spotçu Dükkanı",
+    "og:description": "İstanbul'da ikinci el mobilya ve beyaz eşya ürünlerimizi keşfedin.",
+    "og:url": "https://spotcudukkani.com/urunler",
+  });
+
   const [, setLocation] = useLocation();
   const searchString = useSearch();
   const searchParams = new URLSearchParams(searchString);

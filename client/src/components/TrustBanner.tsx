@@ -38,7 +38,7 @@ function TrustBanner() {
         <section className="relative -mt-8 md:-mt-10 z-10 pb-4">
             <div className="container">
                 <ScrollAnimation direction="up">
-                    <div className="bg-white rounded-2xl shadow-xl border border-[#2F2F2F]/5 px-6 py-6 md:px-8 md:py-7">
+                    <div className="bg-card rounded-2xl shadow-xl border border-border/30 px-6 py-6 md:px-8 md:py-7 transition-colors duration-300">
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
                             {stats.map((stat, index) => (
                                 <div
@@ -51,10 +51,10 @@ function TrustBanner() {
                                         <stat.icon className={`w-6 h-6 md:w-7 md:h-7 ${stat.color}`} />
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="text-lg md:text-xl lg:text-2xl font-extrabold text-[#2F2F2F] leading-tight">
+                                        <p className="text-lg md:text-xl lg:text-2xl font-extrabold text-foreground leading-tight">
                                             {stat.value}
                                         </p>
-                                        <p className="text-xs md:text-sm text-[#2F2F2F]/60 leading-tight">
+                                        <p className="text-xs md:text-sm text-muted-foreground leading-tight">
                                             {stat.label}
                                         </p>
                                     </div>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
+import { useMetaTags } from "@/components/SEO";
 import ProductCard from "@/components/ProductCard";
 import { trpc } from "@/lib/trpc";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,6 +21,14 @@ const SUB_CATEGORIES = [
 ];
 
 export default function ProductsBeyazEsya() {
+  useMetaTags({
+    title: "2.El Beyaz Eşya | Spotçu Dükkanı - Kadıköy Fikirtepe",
+    description: "Kadıköy Fikirtepe'de uygun fiyatlı ikinci el beyaz eşya. Buzdolabı, çamaşır makinesi, bulaşık makinesi ve daha fazlası.",
+    "og:title": "2.El Beyaz Eşya | Spotçu Dükkanı",
+    "og:description": "Kadıköy'de uygun fiyatlı ikinci el beyaz eşya fırsatları.",
+    "og:url": "https://spotcudukkani.com/urunler/beyaz-esya",
+  });
+
   const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null);
   
   const { data: products, isLoading } = trpc.products.list.useQuery({ 

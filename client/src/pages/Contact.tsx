@@ -1,4 +1,5 @@
 import Layout from "@/components/Layout";
+import { useMetaTags } from "@/components/SEO";
 import { Phone, Mail, MapPin, Clock, MessageCircle, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,7 +35,7 @@ const contactInfo = [
     title: "E-posta",
     value: EMAIL,
     href: `mailto:${EMAIL}`,
-    color: "bg-[#2F2F2F]",
+    color: "bg-foreground",
   },
 ];
 
@@ -43,6 +44,14 @@ const workingHours = [
 ];
 
 export default function Contact() {
+  useMetaTags({
+    title: "İletişim | Spotçu Dükkanı - Kadıköy Fikirtepe",
+    description: "Spotçu Dükkanı iletişim bilgileri. Kadıköy Fikirtepe'de ikinci el mobilya ve beyaz eşya alım satım. Tel: +90 539 316 00 07",
+    "og:title": "İletişim | Spotçu Dükkanı",
+    "og:description": "Kadıköy Fikirtepe'de size yardımcı olmaktan mutluluk duyarız. Hemen arayın!",
+    "og:url": "https://spotcudukkani.com/iletisim",
+  });
+
   const whatsappLink = `https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent("Merhaba, bilgi almak istiyorum.")}`;
   const phoneLink = `tel:${PHONE_NUMBER}`;
   
@@ -64,10 +73,10 @@ export default function Contact() {
       </section>
 
       {/* Main CTA Buttons - Büyük ve Belirgin */}
-      <section className="py-12 lg:py-16 bg-[#F9F8F4]">
+      <section className="py-12 lg:py-16 bg-background transition-colors duration-300">
         <div className="container">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#2F2F2F] text-center mb-8 lg:mb-10">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground text-center mb-8 lg:mb-10">
               Hemen Bize Ulaşın
             </h2>
             
@@ -105,7 +114,7 @@ export default function Contact() {
       </section>
 
       {/* Contact Info Cards */}
-      <section className="py-12 lg:py-16 bg-white">
+      <section className="py-12 lg:py-16 bg-card transition-colors duration-300">
         <div className="container">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto">
             {contactInfo.map((info, index) => (
@@ -116,15 +125,15 @@ export default function Contact() {
                 rel={info.title === "WhatsApp" ? "noopener noreferrer" : undefined}
                 className="block"
               >
-                <Card className="h-full bg-white border-none shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 group">
+                <Card className="h-full bg-card border-none shadow-lg hover:shadow-xl transition-all hover:-translate-y-1 group">
                   <CardContent className="p-6 lg:p-8 text-center">
                     <div className={`w-16 h-16 lg:w-20 lg:h-20 mx-auto mb-5 rounded-2xl ${info.color} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform`}>
                       <info.icon className="w-8 h-8 lg:w-10 lg:h-10 text-white" />
                     </div>
-                    <h3 className="text-lg lg:text-xl font-bold text-[#2F2F2F] mb-2">
+                    <h3 className="text-lg lg:text-xl font-bold text-foreground mb-2">
                       {info.title}
                     </h3>
-                    <p className="text-base lg:text-lg text-[#2F2F2F]/70 group-hover:text-[#FFD300] transition-colors">
+                    <p className="text-base lg:text-lg text-muted-foreground group-hover:text-[#FFD300] transition-colors">
                       {info.value}
                     </p>
                   </CardContent>
@@ -162,26 +171,26 @@ export default function Contact() {
       </section>
 
       {/* Address & Map Section */}
-      <section className="py-12 lg:py-16 bg-[#F9F8F4]">
+      <section className="py-12 lg:py-16 bg-background transition-colors duration-300">
         <div className="container">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 max-w-6xl mx-auto">
             {/* Address Info */}
             <div>
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#2F2F2F] mb-6 lg:mb-8">
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-6 lg:mb-8">
                 Adresimiz - Kadıköy Fikirtepe
               </h2>
               
-              <Card className="bg-white border-none shadow-lg mb-6 lg:mb-8">
+              <Card className="bg-card border-none shadow-lg mb-6 lg:mb-8">
                 <CardContent className="p-6 lg:p-8">
                   <div className="flex items-start gap-4">
                     <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-xl bg-[#FFD300]/10 flex items-center justify-center flex-shrink-0">
                       <MapPin className="w-7 h-7 lg:w-8 lg:h-8 text-[#FFD300]" />
                     </div>
                     <div>
-                      <h3 className="text-lg lg:text-xl font-bold text-[#2F2F2F] mb-2">
+                      <h3 className="text-lg lg:text-xl font-bold text-foreground mb-2">
                         Spotçu Dükkanı
                       </h3>
-                      <p className="text-base lg:text-lg text-[#2F2F2F]/70 leading-relaxed mb-4">
+                      <p className="text-base lg:text-lg text-muted-foreground leading-relaxed mb-4">
                         {ADDRESS}
                       </p>
                       {/* v5.0: Yol tarifi butonu */}
@@ -201,14 +210,14 @@ export default function Contact() {
               </Card>
 
               {/* Working Hours */}
-              <Card className="bg-white border-none shadow-lg">
+              <Card className="bg-card border-none shadow-lg">
                 <CardContent className="p-6 lg:p-8">
                   <div className="flex items-start gap-4 mb-5">
                     <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-xl bg-[#FFD300]/10 flex items-center justify-center flex-shrink-0">
                       <Clock className="w-7 h-7 lg:w-8 lg:h-8 text-[#FFD300]" />
                     </div>
                     <div>
-                      <h3 className="text-lg lg:text-xl font-bold text-[#2F2F2F]">
+                      <h3 className="text-lg lg:text-xl font-bold text-foreground">
                         Çalışma Saatleri
                       </h3>
                     </div>
@@ -216,8 +225,8 @@ export default function Contact() {
                   <ul className="space-y-3 lg:space-y-4">
                     {workingHours.map((item, index) => (
                       <li key={index} className="flex justify-between text-base lg:text-lg">
-                        <span className="text-[#2F2F2F]/70">{item.day}</span>
-                        <span className={`font-semibold ${item.hours === "Kapalı" ? "text-red-500" : "text-[#2F2F2F]"}`}>
+                        <span className="text-muted-foreground">{item.day}</span>
+                        <span className={`font-semibold ${item.hours === "Kapalı" ? "text-red-500" : "text-foreground"}`}>
                           {item.hours}
                         </span>
                       </li>
@@ -229,7 +238,7 @@ export default function Contact() {
 
             {/* Map */}
             <div>
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#2F2F2F] mb-6 lg:mb-8">
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-6 lg:mb-8">
                 Harita
               </h2>
               <div className="rounded-2xl overflow-hidden shadow-lg h-[400px] lg:h-[500px]">
@@ -245,7 +254,7 @@ export default function Contact() {
                 />
               </div>
               {/* v5.0: Harita altı bilgi */}
-              <p className="text-sm text-[#2F2F2F]/60 mt-4 text-center">
+              <p className="text-sm text-muted-foreground mt-4 text-center">
                 Fikirtepe Metrobüs Durağı yakını | Kadıköy Fikirtepe
               </p>
             </div>

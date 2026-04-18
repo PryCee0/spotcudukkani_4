@@ -42,7 +42,7 @@ export default function Footer() {
   const whatsappLink = `https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent("Merhaba, bilgi almak istiyorum.")}`;
 
   return (
-    <footer className="bg-[#2F2F2F] text-white">
+    <footer className="bg-[#1a1a1a] text-white">
       {/* Main Footer - Büyütülmüş */}
       <div className="container py-14 lg:py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">

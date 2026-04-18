@@ -1,4 +1,5 @@
 import Layout from "@/components/Layout";
+import { useMetaTags } from "@/components/SEO";
 import { Card, CardContent } from "@/components/ui/card";
 import { Shield, Heart, Users, Clock, Target, Award, MapPin, Calendar } from "lucide-react";
 
@@ -34,6 +35,14 @@ const milestones = [
 ];
 
 export default function About() {
+  useMetaTags({
+    title: "Hakkımızda | Spotçu Dükkanı - 2012'den Beri İstanbul'da",
+    description: "2012'den beri Kadıköy Fikirtepe'de ikinci el mobilya ve beyaz eşya alım satım hizmeti. Güvenilir, hızlı ve profesyonel hizmet.",
+    "og:title": "Hakkımızda | Spotçu Dükkanı",
+    "og:description": "2012'den beri İstanbul'da ikinci el eşya sektöründe güvenin adresi.",
+    "og:url": "https://spotcudukkani.com/hakkimizda",
+  });
+
   return (
     <Layout>
       {/* Hero Section */}

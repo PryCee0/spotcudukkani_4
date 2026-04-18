@@ -23,7 +23,7 @@ const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 // v7.0: Minimal loading fallback
 function PageLoader() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#F9F8F4]">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-8 h-8 border-4 border-[#FFD300] border-t-transparent rounded-full animate-spin" />
     </div>
   );
@@ -53,7 +53,7 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="light">
+      <ThemeProvider defaultTheme="light" switchable={true}>
         <TooltipProvider>
           <ScrollToTop />
           <Toaster />

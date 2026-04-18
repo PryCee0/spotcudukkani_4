@@ -1,5 +1,4 @@
 import { TRPCError } from "@trpc/server";
-import { ENV } from "./env";
 
 export type NotificationPayload = {
   title: string;
@@ -58,40 +57,26 @@ const validatePayload = (input: NotificationPayload): NotificationPayload => {
 };
 
 /**
- * Dispatches a project-owner notification through the Manus Notification Service.
- * Returns `true` if the request was accepted, `false` when the upstream service
- * cannot be reached (callers can fall back to email/slack). Validation errors
- * bubble up as TRPC errors so callers can fix the payload.
+ * v7.1: Dispatches a notification via the configured webhook (n8n/WEBHOOK_URL).
+ * Falls back gracefully if no webhook is configured.
+ * Returns `true` if the request was accepted, `false` otherwise.
  */
 export async function notifyOwner(
   payload: NotificationPayload
 ): Promise<boolean> {
   const { title, content } = validatePayload(payload);
 
-  if (!ENV.forgeApiUrl) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Notification service URL is not configured.",
-    });
+  const webhookUrl = process.env.WEBHOOK_URL;
+  if (!webhookUrl) {
+    console.warn("[Notification] WEBHOOK_URL is not configured, skipping notification.");
+    return false;
   }
-
-  if (!ENV.forgeApiKey) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Notification service API key is not configured.",
-    });
-  }
-
-  const endpoint = buildEndpointUrl(ENV.forgeApiUrl);
 
   try {
-    const response = await fetch(endpoint, {
+    const response = await fetch(webhookUrl, {
       method: "POST",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${ENV.forgeApiKey}`,
         "content-type": "application/json",
-        "connect-protocol-version": "1",
       },
       body: JSON.stringify({ title, content }),
     });
@@ -99,7 +84,7 @@ export async function notifyOwner(
     if (!response.ok) {
       const detail = await response.text().catch(() => "");
       console.warn(
-        `[Notification] Failed to notify owner (${response.status} ${response.statusText})${
+        `[Notification] Webhook failed (${response.status} ${response.statusText})${
           detail ? `: ${detail}` : ""
         }`
       );
@@ -108,7 +93,7 @@ export async function notifyOwner(
 
     return true;
   } catch (error) {
-    console.warn("[Notification] Error calling notification service:", error);
+    console.warn("[Notification] Error calling webhook:", error);
     return false;
   }
 }

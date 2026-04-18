@@ -12,8 +12,8 @@ export default function Home() {
     <Layout>
       <HeroSlider />
       <TrustBanner />
-      <TrustCards />
       <CategoryCards />
+      <TrustCards />
       <FeaturedProducts />
       <CTABanner />
       <Testimonials />

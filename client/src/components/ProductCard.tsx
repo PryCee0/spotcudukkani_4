@@ -82,10 +82,10 @@ export default function ProductCard({
 
   return (
     <>
-      <Card className="group overflow-hidden bg-white border-none shadow-md hover:shadow-xl transition-all duration-300">
+      <Card className="group overflow-hidden bg-card border-none shadow-lg hover:shadow-xl transition-all duration-300">
         {/* Product Image - Clickable to open modal */}
         <div
-          className="relative aspect-[4/3] overflow-hidden bg-[#F9F8F4] cursor-pointer"
+          className="relative aspect-[4/3] overflow-hidden bg-muted cursor-pointer"
           onClick={() => setIsModalOpen(true)}
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setIsModalOpen(true); } }}
           role="button"
@@ -101,8 +101,8 @@ export default function ProductCard({
               decoding="async"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-[#F9F8F4]">
-              <ImageOff className="w-14 h-14 lg:w-16 lg:h-16 text-[#2F2F2F]/15" />
+            <div className="w-full h-full flex items-center justify-center bg-muted">
+              <ImageOff className="w-14 h-14 lg:w-16 lg:h-16 text-muted-foreground/30" />
             </div>
           )}
 
@@ -119,7 +119,7 @@ export default function ProductCard({
             {subCategoryLabel && (
               <Badge
                 variant="outline"
-                className="text-sm px-3 py-1.5 bg-white/90 text-[#2F2F2F] border-[#2F2F2F]/20"
+                className="text-sm px-3 py-1.5 bg-card/90 text-foreground border-border"
               >
                 {subCategoryLabel}
               </Badge>
@@ -143,9 +143,9 @@ export default function ProductCard({
           )}
 
           {/* View details overlay on hover */}
-          <div className="absolute inset-0 bg-[#2F2F2F]/0 group-hover:bg-[#2F2F2F]/30 transition-colors duration-300 flex items-center justify-center">
-            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white rounded-full p-3 shadow-lg">
-              <Eye className="w-6 h-6 text-[#2F2F2F]" />
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center">
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-card rounded-full p-3 shadow-lg">
+              <Eye className="w-6 h-6 text-foreground" />
             </div>
           </div>
         </div>
@@ -153,13 +153,13 @@ export default function ProductCard({
         {/* Product Info */}
         <CardContent className="p-5 lg:p-6">
           <h3
-            className="text-lg lg:text-xl font-bold text-[#2F2F2F] mb-2 lg:mb-3 line-clamp-1 group-hover:text-[#FFD300] transition-colors cursor-pointer"
+            className="text-lg lg:text-xl font-bold text-foreground mb-2 lg:mb-3 line-clamp-1 group-hover:text-[#FFD300] transition-colors cursor-pointer"
             onClick={() => setIsModalOpen(true)}
           >
             {title}
           </h3>
           {description && (
-            <p className="text-base lg:text-lg text-[#2F2F2F]/60 mb-4 lg:mb-5 line-clamp-2 leading-relaxed">
+            <p className="text-base lg:text-lg text-muted-foreground mb-4 lg:mb-5 line-clamp-2 leading-relaxed">
               {description}
             </p>
           )}
@@ -168,7 +168,7 @@ export default function ProductCard({
           <div className="flex gap-2">
             <Button
               variant="outline"
-              className="flex-1 border-2 border-[#2F2F2F]/20 hover:border-[#FFD300] hover:bg-[#FFD300]/5 text-[#2F2F2F] gap-2 text-base py-3 h-auto"
+              className="flex-1 border-2 border-border hover:border-[#FFD300] hover:bg-[#FFD300]/5 text-foreground gap-2 text-base py-3 h-auto"
               onClick={() => setIsModalOpen(true)}
             >
               <Eye className="w-4 h-4" />

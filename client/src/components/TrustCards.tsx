@@ -22,15 +22,15 @@ const trustItems = [
 
 export default function TrustCards() {
   return (
-    <section className="py-16 md:py-20 lg:py-24 bg-[#F9F8F4]">
+    <section className="py-16 md:py-20 lg:py-24 bg-background transition-colors duration-300">
       <div className="container">
         {/* Section Header - Büyütülmüş */}
         <ScrollAnimation direction="up">
           <div className="text-center mb-12 lg:mb-16">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-[#2F2F2F] mb-4 lg:mb-5">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-4 lg:mb-5">
               Spotçu Dükkanı
             </h2>
-            <p className="text-lg md:text-xl lg:text-2xl text-[#2F2F2F]/70 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               İstanbul genelinde beyaz eşya ve mobilya alım satım dükkanı
             </p>
           </div>
@@ -40,15 +40,15 @@ export default function TrustCards() {
         <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8" staggerDelay={0.15}>
           {trustItems.map((item, index) => (
             <StaggerItem key={index} direction="up">
-              <Card className="bg-white border-none shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden group">
+              <Card className="bg-card border-none shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden group">
                 <CardContent className="p-8 lg:p-10 text-center">
                   <div className="w-18 h-18 lg:w-20 lg:h-20 mx-auto mb-6 lg:mb-8 rounded-2xl bg-[#FFD300]/10 flex items-center justify-center group-hover:bg-[#FFD300]/20 transition-colors">
                     <item.icon className="w-9 h-9 lg:w-10 lg:h-10 text-[#FFD300]" />
                   </div>
-                  <h3 className="text-xl lg:text-2xl font-bold text-[#2F2F2F] mb-3 lg:mb-4">
+                  <h3 className="text-xl lg:text-2xl font-bold text-foreground mb-3 lg:mb-4">
                     {item.title}
                   </h3>
-                  <p className="text-base lg:text-lg text-[#2F2F2F]/70 leading-relaxed">
+                  <p className="text-base lg:text-lg text-muted-foreground leading-relaxed">
                     {item.description}
                   </p>
                 </CardContent>

@@ -2,9 +2,9 @@ import "dotenv/config";
 import express from "express";
 import helmet from "helmet";
 import { createServer } from "http";
-import net from "net";
 import path from "path";
 import fs from "fs";
+import rateLimit from "express-rate-limit";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
@@ -13,23 +13,44 @@ import { ensureUploadDir, getUploadDirPath } from "../localStorage";
 import { runMigrations } from "../migrate";
 import { getDb } from "../db";
 
-function isPortAvailable(port: number): Promise<boolean> {
-  return new Promise(resolve => {
-    const server = net.createServer();
+/**
+ * v7.1: Try to listen on a port, returns true if successful.
+ * Uses try-listen-catch pattern instead of test-server to avoid race conditions.
+ */
+function tryListen(server: ReturnType<typeof createServer>, port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const onError = (err: NodeJS.ErrnoException) => {
+      if (err.code === "EADDRINUSE") {
+        console.log(`[Port] Port ${port} is busy`);
+        resolve(false);
+      } else {
+        console.error(`[Port] Port ${port} error:`, err.message);
+        resolve(false);
+      }
+    };
+
+    server.once("error", onError);
     server.listen(port, () => {
-      server.close(() => resolve(true));
+      server.removeListener("error", onError);
+      console.log(`[Port] Successfully bound to port ${port}`);
+      resolve(true);
     });
-    server.on("error", () => resolve(false));
   });
 }
 
-async function findAvailablePort(startPort: number = 3000): Promise<number> {
+/**
+ * Find an available port by actually trying to bind, starting from startPort.
+ */
+async function listenOnAvailablePort(
+  server: ReturnType<typeof createServer>,
+  startPort: number = 3000
+): Promise<number> {
   for (let port = startPort; port < startPort + 20; port++) {
-    if (await isPortAvailable(port)) {
+    if (await tryListen(server, port)) {
       return port;
     }
   }
-  throw new Error(`No available port found starting from ${startPort}`);
+  throw new Error(`No available port found in range ${startPort}-${startPort + 19}`);
 }
 
 /**
@@ -212,6 +233,35 @@ async function startServer() {
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
 
+  // v7.1: Rate limiting for admin login (brute-force protection)
+  const adminLoginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 dakika
+    max: 5, // max 5 deneme
+    message: { error: "Çok fazla giriş denemesi. 15 dakika sonra tekrar deneyin." },
+    standardHeaders: true,
+    legacyHeaders: false,
+    // Only apply to admin.login mutation
+    skip: (req) => {
+      const url = req.url || "";
+      return !url.includes("admin.login");
+    },
+  });
+
+  // v7.1: Rate limiting for view increment (anti-bot)
+  const viewLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 dakika
+    max: 30, // max 30 view/dakika per IP
+    standardHeaders: false,
+    legacyHeaders: false,
+    skip: (req) => {
+      const url = req.url || "";
+      return !url.includes("products.incrementView");
+    },
+  });
+
+  // Apply rate limiters before tRPC
+  app.use("/api/trpc", adminLoginLimiter, viewLimiter);
+
   // tRPC API
   app.use(
     "/api/trpc",
@@ -221,36 +271,31 @@ async function startServer() {
     })
   );
 
-  // Development mode uses Vite (dynamically imported), production uses static files
-  if (process.env.NODE_ENV === "development") {
-    // Dynamic import to avoid bundling Vite in production
-    try {
-      const { setupVite } = await import("./vite");
-      await setupVite(app, server);
-    } catch (error) {
-      console.error("[Dev] Failed to setup Vite:", error);
-      // Fallback to static files
-      serveStaticFiles(app);
-    }
-  } else {
-    // Production mode - serve static files directly
+  // v7.1: Development mode uses split architecture:
+  //   - Express runs on port 3001 (API only)
+  //   - Vite runs separately on port 5173 (via `npx vite`) and proxies /api to 3001
+  // Production mode: Express serves everything on port 3000
+  if (process.env.NODE_ENV !== "development") {
     serveStaticFiles(app);
   }
 
-  const preferredPort = parseInt(process.env.PORT || "3000");
-  const port = await findAvailablePort(preferredPort);
+  // v7.1: Listen on available port (try-listen-catch, no race condition)
+  const defaultPort = process.env.NODE_ENV === "development" ? 3001 : 3000;
+  const preferredPort = parseInt(process.env.PORT || String(defaultPort));
+  const port = await listenOnAvailablePort(server, preferredPort);
 
   if (port !== preferredPort) {
-    console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
+    console.log(`[Port] Preferred port ${preferredPort} was busy, using ${port}`);
   }
 
-  server.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}/`);
-    console.log(`[Storage] Upload directory: ${uploadDir}`);
-    if (process.env.UPLOAD_DIR) {
-      console.log(`[Storage] Using persistent storage from UPLOAD_DIR environment variable`);
-    }
-  });
+  console.log(`Server running on http://localhost:${port}/`);
+  console.log(`[Storage] Upload directory: ${uploadDir}`);
+  if (process.env.UPLOAD_DIR) {
+    console.log(`[Storage] Using persistent storage from UPLOAD_DIR environment variable`);
+  }
+  if (process.env.NODE_ENV === "development") {
+    console.log(`[Dev] API server ready. Run 'npx vite' in another terminal for frontend (http://localhost:5173)`);
+  }
 }
 
 startServer().catch(console.error);

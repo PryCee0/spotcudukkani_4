@@ -14,21 +14,23 @@ export async function setupVite(app: Express, server: Server) {
   }
 
   try {
+    console.log("[Dev] Setting up Vite dev server...");
+    
     // Dynamic imports to avoid bundling Vite in production
     const { createServer: createViteServer } = await import("vite");
     const { nanoid } = await import("nanoid");
-    const viteConfig = (await import("../../vite.config")).default;
 
-    const serverOptions = {
-      middlewareMode: true,
-      hmr: { server },
-      allowedHosts: true as const,
-    };
-
+    // v7.1: Let Vite load the config file natively instead of manual import
+    // This properly handles async configs, plugin resolution, and avoids hanging
+    const viteConfigPath = path.resolve(import.meta.dirname, "../..", "vite.config.ts");
+    
     const vite = await createViteServer({
-      ...viteConfig,
-      configFile: false,
-      server: serverOptions,
+      configFile: viteConfigPath,
+      server: {
+        middlewareMode: true,
+        hmr: { server },
+        allowedHosts: true,
+      },
       appType: "custom",
     });
 
@@ -57,6 +59,8 @@ export async function setupVite(app: Express, server: Server) {
         next(e);
       }
     });
+    
+    console.log("[Dev] Vite dev server ready");
   } catch (error) {
     console.error("Failed to setup Vite dev server:", error);
     throw error;

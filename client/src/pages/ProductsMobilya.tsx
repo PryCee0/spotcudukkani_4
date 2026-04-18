@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
+import { useMetaTags } from "@/components/SEO";
 import ProductCard from "@/components/ProductCard";
 import { trpc } from "@/lib/trpc";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,6 +22,14 @@ const SUB_CATEGORIES = [
 ];
 
 export default function ProductsMobilya() {
+  useMetaTags({
+    title: "2.El Mobilya | Spotçu Dükkanı - Kadıköy Fikirtepe",
+    description: "Kadıköy Fikirtepe'de kaliteli ikinci el mobilya fırsatları. Koltuk takımı, köşe koltuk, yatak, gardırop ve daha fazlası uygun fiyatlarla.",
+    "og:title": "2.El Mobilya | Spotçu Dükkanı",
+    "og:description": "Kadıköy'de kaliteli ikinci el mobilya fırsatlarını keşfedin.",
+    "og:url": "https://spotcudukkani.com/urunler/mobilya",
+  });
+
   const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null);
   
   const { data: products, isLoading } = trpc.products.list.useQuery({ 

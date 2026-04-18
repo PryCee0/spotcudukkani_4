@@ -26,8 +26,8 @@ services:
       - NODE_ENV=production
       - PORT=3000
       - DATABASE_URL=${DATABASE_URL}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-spotcu2024}
-      - JWT_SECRET=${JWT_SECRET:-change-this-secret}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:?ADMIN_PASSWORD is required}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required}
       - WEBHOOK_URL=${WEBHOOK_URL:-}
       - BLOG_API_KEY=${BLOG_API_KEY:-}
     volumes:

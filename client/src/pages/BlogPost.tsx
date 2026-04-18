@@ -55,10 +55,10 @@ export default function BlogPost() {
     return (
       <Layout>
         <div className="container py-20 text-center">
-          <h1 className="text-3xl font-bold text-[#2F2F2F] mb-4">
+          <h1 className="text-3xl font-bold text-foreground mb-4">
             Blog yazısı bulunamadı
           </h1>
-          <p className="text-[#2F2F2F]/60 mb-8">
+          <p className="text-muted-foreground mb-8">
             Aradığınız blog yazısı mevcut değil veya kaldırılmış olabilir.
           </p>
           <Link href="/blog">
@@ -87,7 +87,7 @@ export default function BlogPost() {
           <div className="max-w-4xl mx-auto">
             {/* Back Button */}
             <Link href="/blog">
-              <Button variant="ghost" className="gap-2 mb-8 text-[#2F2F2F]/70 hover:text-[#2F2F2F]">
+              <Button variant="ghost" className="gap-2 mb-8 text-muted-foreground hover:text-foreground">
                 <ArrowLeft className="w-4 h-4" />
                 Blog'a Dön
               </Button>
@@ -107,12 +107,12 @@ export default function BlogPost() {
 
             {/* Header */}
             <header className="mb-10">
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-[#2F2F2F] mb-4 leading-tight">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-4 leading-tight">
                 {post.title}
               </h1>
               
               <div className="flex items-center justify-between flex-wrap gap-4">
-                <div className="flex items-center gap-2 text-[#2F2F2F]/60">
+                <div className="flex items-center gap-2 text-muted-foreground">
                   <Calendar className="w-5 h-5" />
                   <span className="text-lg">
                     {format(new Date(post.createdAt), "d MMMM yyyy", { locale: tr })}
@@ -132,17 +132,17 @@ export default function BlogPost() {
             </header>
 
             {/* Content */}
-            <div className="prose prose-lg max-w-none prose-headings:text-[#2F2F2F] prose-p:text-[#2F2F2F]/80 prose-a:text-[#FFD300] prose-strong:text-[#2F2F2F]">
+            <div className="prose prose-lg max-w-none prose-headings:text-foreground prose-p:text-foreground/80 prose-a:text-[#FFD300] prose-strong:text-foreground dark:prose-invert">
               <Streamdown>{post.content}</Streamdown>
             </div>
 
             {/* Footer CTA */}
-            <div className="mt-12 pt-8 border-t border-[#2F2F2F]/10">
-              <div className="bg-[#F9F8F4] rounded-2xl p-8 text-center">
-                <h3 className="text-2xl font-bold text-[#2F2F2F] mb-4">
+            <div className="mt-12 pt-8 border-t border-border">
+              <div className="bg-muted rounded-2xl p-8 text-center transition-colors duration-300">
+                <h3 className="text-2xl font-bold text-foreground mb-4">
                   İkinci el eşya mı arıyorsunuz?
                 </h3>
-                <p className="text-[#2F2F2F]/70 mb-6">
+                <p className="text-muted-foreground mb-6">
                   Kaliteli ve uygun fiyatlı 2.el mobilya ve beyaz eşya için bize ulaşın.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

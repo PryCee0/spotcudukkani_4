@@ -27,19 +27,6 @@ const requireUser = t.middleware(async opts => {
 
 export const protectedProcedure = t.procedure.use(requireUser);
 
-export const adminProcedure = t.procedure.use(
-  t.middleware(async opts => {
-    const { ctx, next } = opts;
-
-    if (!ctx.user || ctx.user.role !== 'admin') {
-      throw new TRPCError({ code: "FORBIDDEN", message: NOT_ADMIN_ERR_MSG });
-    }
-
-    return next({
-      ctx: {
-        ...ctx,
-        user: ctx.user,
-      },
-    });
-  }),
-);
+// NOTE: adminProcedure is defined in routers.ts using JWT cookie authentication.
+// The legacy OAuth-based adminProcedure has been removed to avoid confusion.
+// If systemRouter needs admin access, import from routers.ts or use the JWT-based approach.
