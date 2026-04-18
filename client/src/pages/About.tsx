@@ -46,7 +46,7 @@ export default function About() {
   return (
     <Layout>
       {/* Hero Section */}
-      <section className="relative bg-foreground py-16 md:py-24 overflow-hidden">
+      <section className="relative bg-zinc-900 dark:bg-zinc-950 py-16 md:py-24 overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 right-0 w-96 h-96 bg-primary rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary rounded-full blur-3xl" />
@@ -173,7 +173,7 @@ export default function About() {
       </section>
 
       {/* Vision Section */}
-      <section className="py-16 md:py-20 bg-foreground text-white">
+      <section className="py-16 md:py-20 bg-zinc-900 dark:bg-zinc-950 text-white">
         <div className="container">
           <div className="max-w-3xl mx-auto text-center">
             <Target className="w-12 h-12 mx-auto mb-6 text-primary" />

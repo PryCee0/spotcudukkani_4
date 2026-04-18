@@ -264,26 +264,30 @@ export default function ImageCarousel({
             <Button
               variant="ghost"
               size="icon"
-              className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-md text-[#2F2F2F]"
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-md text-[#2F2F2F] z-50"
               onClick={(e) => {
                 e.stopPropagation();
                 goToPrev();
               }}
+              onPointerDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
               aria-label="Önceki fotoğraf"
             >
-              <ChevronLeft className="w-6 h-6" />
+              <ChevronLeft className="w-6 h-6 pointer-events-none" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-md text-[#2F2F2F]"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-md text-[#2F2F2F] z-50"
               onClick={(e) => {
                 e.stopPropagation();
                 goToNext();
               }}
+              onPointerDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
               aria-label="Sonraki fotoğraf"
             >
-              <ChevronRight className="w-6 h-6" />
+              <ChevronRight className="w-6 h-6 pointer-events-none" />
             </Button>
           </>
         )}
@@ -382,26 +386,30 @@ export default function ImageCarousel({
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 text-white"
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 text-white z-50"
                 onClick={(e) => {
                   e.stopPropagation();
                   goToPrev();
                 }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
                 aria-label="Önceki fotoğraf"
               >
-                <ChevronLeft className="w-8 h-8" />
+                <ChevronLeft className="w-8 h-8 pointer-events-none" />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 text-white"
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 text-white z-50"
                 onClick={(e) => {
                   e.stopPropagation();
                   goToNext();
                 }}
+                onPointerDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
                 aria-label="Sonraki fotoğraf"
               >
-                <ChevronRight className="w-8 h-8" />
+                <ChevronRight className="w-8 h-8 pointer-events-none" />
               </Button>
             </>
           )}

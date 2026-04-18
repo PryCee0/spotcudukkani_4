@@ -330,7 +330,7 @@ export default function Products() {
   return (
     <Layout>
       {/* Page Header */}
-      <section className="bg-foreground py-12 md:py-16">
+      <section className="bg-zinc-900 dark:bg-zinc-950 py-12 md:py-16">
         <div className="container">
           <div className="flex items-center gap-3 text-gray-400 text-sm mb-4">
             <Link href="/" className="hover:text-white transition-colors">

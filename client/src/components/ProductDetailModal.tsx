@@ -184,14 +184,14 @@ export default function ProductDetailModal({
             variant="ghost"
             size="icon"
             onClick={handleClose}
-            className="absolute top-3 right-3 z-50 rounded-full bg-white/95 hover:bg-white shadow-md w-12 h-12 border border-gray-200"
+            className="absolute top-3 right-3 z-50 rounded-full bg-background/95 hover:bg-muted shadow-md w-12 h-12 border border-border"
             aria-label="Kapat"
           >
             <X className="w-6 h-6" />
           </Button>
 
           {/* Header */}
-          <DialogHeader className="sticky top-0 z-10 bg-white border-b border-[#2F2F2F]/10 px-6 py-4">
+          <DialogHeader className="sticky top-0 z-10 bg-background border-b border-border px-6 py-4">
             <div className="flex items-start justify-between gap-4 pr-12">
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap gap-2 mb-2">
@@ -206,13 +206,13 @@ export default function ProductDetailModal({
                   {subCategoryLabel && (
                     <Badge
                       variant="outline"
-                      className="text-sm bg-white text-[#2F2F2F] border-[#2F2F2F]/20"
+                      className="text-sm bg-background text-foreground border-foreground/20"
                     >
                       {subCategoryLabel}
                     </Badge>
                   )}
                 </div>
-                <DialogTitle className="text-xl md:text-2xl font-bold text-[#2F2F2F]">
+                <DialogTitle className="text-xl md:text-2xl font-bold text-foreground">
                   {product.title}
                 </DialogTitle>
               </div>
@@ -276,41 +276,41 @@ export default function ProductDetailModal({
             {/* Description */}
             {product.description && (
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-[#2F2F2F] mb-3">Ürün Açıklaması</h3>
-                <div className="text-[#2F2F2F]/70 text-base leading-relaxed">
+                <h3 className="text-lg font-semibold text-foreground mb-3">Ürün Açıklaması</h3>
+                <div className="text-muted-foreground text-base leading-relaxed">
                   {formatDescription(product.description)}
                 </div>
               </div>
             )}
 
             {/* Store Info */}
-            <div className="bg-[#F9F8F4] rounded-xl p-5 mb-6">
-              <h3 className="text-lg font-semibold text-[#2F2F2F] mb-4">Mağaza Bilgileri</h3>
+            <div className="bg-muted/50 rounded-xl p-5 mb-6">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Mağaza Bilgileri</h3>
               <div className="space-y-3">
-                <div className="flex items-center gap-3 text-[#2F2F2F]/70">
+                <div className="flex items-center gap-3 text-muted-foreground">
                   <div className="w-10 h-10 rounded-full bg-[#FFD300]/20 flex items-center justify-center">
                     <MapPin className="w-5 h-5 text-[#FFD300]" />
                   </div>
                   <div>
-                    <p className="font-medium text-[#2F2F2F]">Kadıköy Fikirtepe</p>
+                    <p className="font-medium text-foreground">Kadıköy Fikirtepe</p>
                     <p className="text-sm">Özbey caddesi no 59, 34773 Fikirtepe Kadıköy/İstanbul</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 text-[#2F2F2F]/70">
+                <div className="flex items-center gap-3 text-muted-foreground">
                   <div className="w-10 h-10 rounded-full bg-[#FFD300]/20 flex items-center justify-center">
                     <Clock className="w-5 h-5 text-[#FFD300]" />
                   </div>
                   <div>
-                    <p className="font-medium text-[#2F2F2F]">Çalışma Saatleri</p>
+                    <p className="font-medium text-foreground">Çalışma Saatleri</p>
                     <p className="text-sm">Haftanın 7 Günü: 09:00 - 19:00</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3 text-[#2F2F2F]/70">
+                <div className="flex items-center gap-3 text-muted-foreground">
                   <div className="w-10 h-10 rounded-full bg-[#25D366]/20 flex items-center justify-center">
                     <Phone className="w-5 h-5 text-[#25D366]" />
                   </div>
                   <div>
-                    <p className="font-medium text-[#2F2F2F]">Telefon</p>
+                    <p className="font-medium text-foreground">Telefon</p>
                     <p className="text-sm">{PHONE_DISPLAY}</p>
                   </div>
                 </div>
@@ -335,8 +335,8 @@ export default function ProductDetailModal({
           </div>
 
           {/* Footer Note */}
-          <div className="border-t border-[#2F2F2F]/10 px-6 py-4 bg-[#F9F8F4]">
-            <p className="text-sm text-[#2F2F2F]/60 text-center">
+          <div className="border-t border-border px-6 py-4 bg-muted/50">
+            <p className="text-sm text-muted-foreground text-center">
               Ürünü yerinde görmek için randevu alabilirsiniz. Aynı gün teslimat ve ücretsiz nakliye hizmeti sunuyoruz.
             </p>
           </div>

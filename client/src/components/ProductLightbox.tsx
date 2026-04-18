@@ -189,20 +189,24 @@ function ProductLightbox({
                                 e.stopPropagation();
                                 goPrev();
                             }}
-                            className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/10 hover:bg-white/25 flex items-center justify-center text-white transition-all backdrop-blur-sm"
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onTouchStart={(e) => e.stopPropagation()}
+                            className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/10 hover:bg-white/25 flex items-center justify-center text-white transition-all backdrop-blur-sm z-50"
                             aria-label="Önceki fotoğraf"
                         >
-                            <ChevronLeft className="w-6 h-6 md:w-7 md:h-7" />
+                            <ChevronLeft className="w-6 h-6 md:w-7 md:h-7 pointer-events-none" />
                         </button>
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
                                 goNext();
                             }}
-                            className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/10 hover:bg-white/25 flex items-center justify-center text-white transition-all backdrop-blur-sm"
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onTouchStart={(e) => e.stopPropagation()}
+                            className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/10 hover:bg-white/25 flex items-center justify-center text-white transition-all backdrop-blur-sm z-50"
                             aria-label="Sonraki fotoğraf"
                         >
-                            <ChevronRight className="w-6 h-6 md:w-7 md:h-7" />
+                            <ChevronRight className="w-6 h-6 md:w-7 md:h-7 pointer-events-none" />
                         </button>
                     </>
                 )}
