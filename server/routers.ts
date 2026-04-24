@@ -30,13 +30,17 @@ import {
   getCategoryBySlug,
   updateCategory,
   deleteCategory,
+  // v10.0: Analytics & Related Products
+  recordVisit,
+  getVisitStats,
+  getRelatedProducts,
 } from "./db";
 import { localStoragePut, localStorageDelete, localStoragePutVideo } from "./localStorage";
 import { nanoid } from "nanoid";
 import axios from "axios";
 import * as jose from "jose";
 import { ProductImage } from "../drizzle/schema";
-import { randomBytes } from "node:crypto";
+import { randomBytes, createHash } from "node:crypto";
 
 // Admin cookie name
 const ADMIN_COOKIE_NAME = "admin_session";
@@ -334,6 +338,23 @@ export const appRouter = router({
         return { success: true };
       }),
 
+    // v10.0: Get related products (same subcategory/category, max 3)
+    related: publicProcedure
+      .input(z.object({
+        productId: z.number(),
+        category: z.string(),
+        subCategory: z.string().nullable(),
+        limit: z.number().min(1).max(6).default(3),
+      }))
+      .query(async ({ input }) => {
+        return await getRelatedProducts(
+          input.productId,
+          input.category,
+          input.subCategory,
+          input.limit
+        );
+      }),
+
     // v6.0: Admin - Get top viewed products
     topViewed: adminProcedure
       .input(z.object({ limit: z.number().optional() }).optional())
@@ -377,7 +398,7 @@ export const appRouter = router({
         if (input.images && input.images.length > 0) {
           for (const img of input.images) {
             const buffer = Buffer.from(img.base64, 'base64');
-            const result = await localStoragePut(buffer, img.mimeType, "products");
+            const result = await localStoragePut(buffer, img.mimeType, "products", input.title);
             productImages.push({ url: result.url, key: result.key });
           }
           // Set first image as main image for backward compatibility
@@ -389,7 +410,7 @@ export const appRouter = router({
         // Handle legacy single image upload
         else if (input.imageBase64 && input.imageMimeType) {
           const buffer = Buffer.from(input.imageBase64, 'base64');
-          const result = await localStoragePut(buffer, input.imageMimeType, "products");
+          const result = await localStoragePut(buffer, input.imageMimeType, "products", input.title);
           imageUrl = result.url;
           imageKey = result.key;
           productImages = [{ url: result.url, key: result.key }];
@@ -413,7 +434,7 @@ export const appRouter = router({
         let videoKey: string | null = null;
         if (input.videoBase64 && input.videoMimeType) {
           const videoBuffer = Buffer.from(input.videoBase64, 'base64');
-          const videoResult = await localStoragePutVideo(videoBuffer, input.videoMimeType, "product-video");
+          const videoResult = await localStoragePutVideo(videoBuffer, input.videoMimeType, "product-video", input.title);
           videoUrl = videoResult.url;
           videoKey = videoResult.key;
           if (product) {
@@ -476,7 +497,7 @@ export const appRouter = router({
         if (images && images.length > 0) {
           for (const img of images) {
             const buffer = Buffer.from(img.base64, 'base64');
-            const result = await localStoragePut(buffer, img.mimeType, "products");
+            const result = await localStoragePut(buffer, img.mimeType, "products", input.title);
             productImages.push({ url: result.url, key: result.key });
           }
         }
@@ -490,7 +511,7 @@ export const appRouter = router({
           }
 
           const buffer = Buffer.from(imageBase64, 'base64');
-          const result = await localStoragePut(buffer, imageMimeType, "products");
+          const result = await localStoragePut(buffer, imageMimeType, "products", input.title);
           updateData.imageUrl = result.url;
           updateData.imageKey = result.key;
 
@@ -527,7 +548,7 @@ export const appRouter = router({
             await localStorageDelete(existingProduct.videoKey as string);
           }
           const videoBuffer = Buffer.from(videoBase64, 'base64');
-          const videoResult = await localStoragePutVideo(videoBuffer, videoMimeType, "product-video");
+          const videoResult = await localStoragePutVideo(videoBuffer, videoMimeType, "product-video", input.title);
           updateData.videoUrl = videoResult.url;
           updateData.videoKey = videoResult.key;
         }
@@ -653,7 +674,7 @@ export const appRouter = router({
         // v5.0: Handle image upload for manual blog posts
         if (input.coverImageBase64 && input.coverImageMimeType) {
           const buffer = Buffer.from(input.coverImageBase64, 'base64');
-          const result = await localStoragePut(buffer, input.coverImageMimeType, "blog");
+          const result = await localStoragePut(buffer, input.coverImageMimeType, "blog", input.title);
           coverImage = result.url;
           coverImageKey = result.key;
         }
@@ -739,7 +760,7 @@ export const appRouter = router({
           }
 
           const buffer = Buffer.from(coverImageBase64, 'base64');
-          const result = await localStoragePut(buffer, coverImageMimeType, "blog");
+          const result = await localStoragePut(buffer, coverImageMimeType, "blog", input.title);
           updateData.coverImage = result.url;
           updateData.coverImageKey = result.key;
         }
@@ -757,6 +778,37 @@ export const appRouter = router({
           await localStorageDelete(post.coverImageKey);
         }
         return await deleteBlogPost(input.id);
+      }),
+  }),
+
+  // v10.0: Stats router for analytics
+  stats: router({
+    // Public: Record a visit (called from frontend on page load)
+    recordVisit: publicProcedure
+      .input(z.object({}).optional())
+      .mutation(async ({ ctx }) => {
+        try {
+          // Create fingerprint from IP + User-Agent hash (GDPR compliant)
+          const req = (ctx as any).req;
+          const ip = req?.headers?.['x-forwarded-for'] || req?.ip || req?.socket?.remoteAddress || 'unknown';
+          const ua = req?.headers?.['user-agent'] || 'unknown';
+          const fingerprint = createHash('sha256')
+            .update(`${ip}:${ua}`)
+            .digest('hex')
+            .substring(0, 32);
+          
+          await recordVisit(fingerprint);
+          return { success: true };
+        } catch {
+          return { success: false };
+        }
+      }),
+
+    // Admin: Get visit statistics
+    getStats: adminProcedure
+      .input(z.object({ days: z.number().min(1).max(365).default(30) }).optional())
+      .query(async ({ input }) => {
+        return await getVisitStats(input?.days ?? 30);
       }),
   }),
 });

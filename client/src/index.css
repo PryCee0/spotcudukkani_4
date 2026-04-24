@@ -156,13 +156,35 @@
 }
 
 @layer base {
+  /* v10.0: %80 ölçeklendirme — rem tabanlı tüm ölçüler otomatik küçülür */
+  html {
+    font-size: 80%;
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
     transition: background-color 0.3s ease, color 0.3s ease;
   }
+
+  /* v10.0: Başlıklara Outfit fontu */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', 'DM Sans', system-ui, sans-serif;
+  }
+
+  /* v10.0: Marka fontu — Spotçu Dükkanı başlığı için */
+  .font-brand {
+    font-family: 'Bruno Ace SC', 'Outfit', system-ui, sans-serif;
+  }
+
+  /* v10.0: Admin panel kendi font-size'ını korur (%80 ölçeğe tabi değil) */
+  .admin-panel {
+    font-size: 1.25rem; /* 80% * 1.25 = 100% orijinal boyut */
+  }
+
   /* v6.0: Admin panel mobile fix - prevent accidental text selection on touch */
   .admin-panel {
     -webkit-user-select: none;

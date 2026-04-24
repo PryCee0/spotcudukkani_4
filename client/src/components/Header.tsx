@@ -11,6 +11,7 @@ const LOCATION = "İstanbul Anadolu/Avrupa";
 const navLinks = [
   { href: "/", label: "Anasayfa" },
   { href: "/hakkimizda", label: "Hakkımızda" },
+  { href: "/esya-sat", label: "Eşya Sat" },
   { href: "/urunler", label: "Ürünlerimiz" },
   { href: "/blog", label: "Blog" },
   { href: "/iletisim", label: "İletişim" },
@@ -24,7 +25,7 @@ export default function Header() {
   const whatsappLink = `https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent("Merhaba, bilgi almak istiyorum.")}`;
 
   return (
-    <header className="sticky top-0 z-50 bg-card shadow-md transition-colors duration-300">
+    <header className="sticky top-0 z-50 bg-card shadow-md transition-colors duration-300" style={{ fontSize: '1.25rem' }}>
       {/* Top Row - Contact Info - Premium büyütülmüş */}
       <div className="border-b border-border/50 bg-background transition-colors duration-300">
         <div className="container py-3 lg:py-4">
@@ -46,7 +47,7 @@ export default function Header() {
                   }
                 }}
               />
-              <span className="text-xl md:text-2xl font-bold text-foreground transition-colors">
+              <span className="font-brand text-2xl md:text-3xl lg:text-4xl font-bold text-foreground transition-colors tracking-wide">
                 Spotçu <span className="text-[#FFD300]">Dükkanı</span>
               </span>
             </Link>
@@ -116,17 +117,17 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Bottom Row - Navigation - Desktop - Büyütülmüş */}
-      <nav className="hidden md:block bg-card border-b border-border/30 transition-colors duration-300">
+      {/* Bottom Row - Navigation - Desktop - Büyütülmüş ve 3D Efektli */}
+      <nav className="hidden md:block bg-card border-b-[4px] border-border/60 shadow-[0_8px_20px_-4px_rgba(0,0,0,0.2)] dark:shadow-[0_8px_20px_-4px_rgba(0,0,0,0.5)] transition-colors duration-300 relative z-40 transform-gpu">
         <div className="container">
-          <ul className="flex items-center gap-2 lg:gap-4">
+          <ul className="flex items-center gap-4 lg:gap-8">
             {navLinks.map((link) => (
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className={`block px-5 lg:px-6 py-4 lg:py-5 text-base lg:text-lg font-medium transition-all hover:text-[#FFD300] ${
+                  className={`block px-6 lg:px-8 py-5 lg:py-6 text-[1.15rem] lg:text-[1.35rem] font-bold transition-all hover:text-[#FFD300] ${
                     location === link.href
-                      ? "text-[#FFD300] border-b-3 border-[#FFD300] bg-[#FFD300]/5"
+                      ? "text-[#FFD300] border-b-[4px] border-[#FFD300] bg-[#FFD300]/10 shadow-[inset_0_-8px_16px_-8px_rgba(255,211,0,0.3)]"
                       : "text-foreground"
                   }`}
                 >

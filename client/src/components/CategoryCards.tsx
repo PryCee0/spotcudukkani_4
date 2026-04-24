@@ -17,7 +17,7 @@ const categoryCards = [
         subtitle: "Buzdolabı, Çamaşır Makinesi & Daha Fazlası",
         href: "/urunler/beyaz-esya",
         emoji: "🧊",
-        gradient: "from-stone-500/90 to-stone-700/90",
+        gradient: "from-amber-500/90 to-yellow-600/90",
         bgImage: "/uploads/slider2.webp",
         items: ["Buzdolabı", "Çamaşır Makinesi", "Bulaşık Makinesi", "Fırın/Ocak", "Klima"],
     },

@@ -163,14 +163,38 @@ export async function runMigrations(): Promise<void> {
     // v5.0: Add isManual column to blog_posts if it doesn't exist
     await checkAndAddColumn(db, 'blog_posts', 'isManual', 'INT NOT NULL DEFAULT 0');
 
+    // v10.0: Create site_visits table for analytics
+    await db.execute(sql.raw(`
+      CREATE TABLE IF NOT EXISTS site_visits (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        visitDate VARCHAR(10) NOT NULL UNIQUE,
+        pageViews INT NOT NULL DEFAULT 0,
+        uniqueVisitors INT NOT NULL DEFAULT 0
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    `));
+    console.log("[Migration] ✓ site_visits table ready");
+
+    // v10.0: Create visitor_fingerprints table
+    await db.execute(sql.raw(`
+      CREATE TABLE IF NOT EXISTS visitor_fingerprints (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        fingerprint VARCHAR(64) NOT NULL,
+        visitDate VARCHAR(10) NOT NULL,
+        UNIQUE KEY unique_visitor_day (fingerprint, visitDate)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    `));
+    console.log("[Migration] ✓ visitor_fingerprints table ready");
+
     // v7.1: Performance indexes for frequently queried columns
     const indexes = [
       `CREATE INDEX IF NOT EXISTS idx_products_category_active ON products (category, isActive)`,
       `CREATE INDEX IF NOT EXISTS idx_products_featured_active ON products (isFeatured, isActive)`,
       `CREATE INDEX IF NOT EXISTS idx_products_created ON products (createdAt DESC)`,
+      `CREATE INDEX IF NOT EXISTS idx_products_subcategory ON products (subCategory, isActive)`,
       `CREATE INDEX IF NOT EXISTS idx_blog_posts_published ON blog_posts (isPublished)`,
       `CREATE INDEX IF NOT EXISTS idx_blog_posts_created ON blog_posts (createdAt DESC)`,
       `CREATE INDEX IF NOT EXISTS idx_categories_parent_active ON categories (parentCategory, isActive)`,
+      `CREATE INDEX IF NOT EXISTS idx_visitor_fingerprints_date ON visitor_fingerprints (visitDate)`,
     ];
 
     for (const indexSql of indexes) {

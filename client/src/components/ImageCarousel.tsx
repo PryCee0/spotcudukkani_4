@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { ChevronLeft, ChevronRight, ImageOff, X, ZoomIn, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, ImageOff, ZoomIn, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -16,17 +16,22 @@ interface ImageCarouselProps {
   showThumbnails?: boolean;
   autoPlay?: boolean;
   autoPlayInterval?: number;
+  /** v9.0: Dışarıdan index kontrolü — Lightbox ile senkronizasyon */
+  currentIndex?: number;
+  onIndexChange?: (index: number) => void;
+  /** v9.0: Zoom butonuna tıklandığında tetiklenir */
+  onZoomClick?: (index: number) => void;
 }
 
 // v5.0: Lazy loading image component
-function LazyImage({ 
-  src, 
-  alt, 
+function LazyImage({
+  src,
+  alt,
   className,
   onLoad,
-}: { 
-  src: string; 
-  alt: string; 
+}: {
+  src: string;
+  alt: string;
   className?: string;
   onLoad?: () => void;
 }) {
@@ -36,12 +41,12 @@ function LazyImage({
   return (
     <div className="relative w-full h-full">
       {!isLoaded && !hasError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#F9F8F4]">
+        <div className="absolute inset-0 flex items-center justify-center bg-[#F9F8F4] dark:bg-[#1a1a1a]">
           <Loader2 className="w-8 h-8 animate-spin text-[#FFD300]" />
         </div>
       )}
       {hasError ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#F9F8F4]">
+        <div className="absolute inset-0 flex items-center justify-center bg-[#F9F8F4] dark:bg-[#1a1a1a]">
           <ImageOff className="w-12 h-12 text-[#2F2F2F]/20" />
         </div>
       ) : (
@@ -74,10 +79,19 @@ export default function ImageCarousel({
   showThumbnails = true,
   autoPlay = false,
   autoPlayInterval = 5000,
+  currentIndex: controlledIndex,
+  onIndexChange,
+  onZoomClick,
 }: ImageCarouselProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [preloadedImages, setPreloadedImages] = useState<Set<number>>(new Set([0]));
+  const [internalIndex, setInternalIndex] = useState(0);
+  // v9.0: Controlled/uncontrolled pattern — Lightbox senkronizasyonu
+  const currentIndex = controlledIndex ?? internalIndex;
+  const setCurrentIndex = useCallback((indexOrFn: number | ((prev: number) => number)) => {
+    const newIndex = typeof indexOrFn === "function" ? indexOrFn(currentIndex) : indexOrFn;
+    setInternalIndex(newIndex);
+    onIndexChange?.(newIndex);
+  }, [currentIndex, onIndexChange]);
+
   // v8.0: Use refs for touch tracking to avoid re-renders during swipe
   const touchStartRef = useRef<number | null>(null);
   const touchEndRef = useRef<number | null>(null);
@@ -95,63 +109,34 @@ export default function ImageCarousel({
 
   const hasMultipleImages = imageList.length > 1;
 
-  // v5.0: Preload adjacent images
-  useEffect(() => {
-    if (imageList.length <= 1) return;
-
-    const toPreload = new Set(preloadedImages);
-    const prevIndex = (currentIndex - 1 + imageList.length) % imageList.length;
-    const nextIndex = (currentIndex + 1) % imageList.length;
-    
-    toPreload.add(prevIndex);
-    toPreload.add(nextIndex);
-    
-    setPreloadedImages(toPreload);
-  }, [currentIndex, imageList.length]);
-
   // Navigation functions with transition guard
   const goToNext = useCallback(() => {
     if (imageList.length === 0 || isTransitioning.current) return;
     isTransitioning.current = true;
     setCurrentIndex((prev) => (prev + 1) % imageList.length);
     setTimeout(() => { isTransitioning.current = false; }, 320);
-  }, [imageList.length]);
+  }, [imageList.length, setCurrentIndex]);
 
   const goToPrev = useCallback(() => {
     if (imageList.length === 0 || isTransitioning.current) return;
     isTransitioning.current = true;
     setCurrentIndex((prev) => (prev - 1 + imageList.length) % imageList.length);
     setTimeout(() => { isTransitioning.current = false; }, 320);
-  }, [imageList.length]);
+  }, [imageList.length, setCurrentIndex]);
 
   const goToIndex = useCallback((index: number) => {
     if (isTransitioning.current) return;
     isTransitioning.current = true;
     setCurrentIndex(index);
     setTimeout(() => { isTransitioning.current = false; }, 320);
-  }, []);
+  }, [setCurrentIndex]);
 
   // Auto-play functionality
   useEffect(() => {
     if (!autoPlay || !hasMultipleImages) return;
-
     const interval = setInterval(goToNext, autoPlayInterval);
     return () => clearInterval(interval);
   }, [autoPlay, autoPlayInterval, goToNext, hasMultipleImages]);
-
-  // Keyboard navigation
-  useEffect(() => {
-    if (!isFullscreen) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft") goToPrev();
-      if (e.key === "ArrowRight") goToNext();
-      if (e.key === "Escape") setIsFullscreen(false);
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isFullscreen, goToNext, goToPrev]);
 
   // v8.0: Optimized touch swipe handling using refs (zero re-renders during drag)
   const minSwipeDistance = 40;
@@ -169,7 +154,6 @@ export default function ImageCarousel({
   const onTouchMove = useCallback((e: React.TouchEvent) => {
     if (!isDraggingRef.current || touchStartRef.current === null) return;
     touchEndRef.current = e.targetTouches[0].clientX;
-    // Visual drag feedback with requestAnimationFrame
     const diff = touchEndRef.current - touchStartRef.current;
     requestAnimationFrame(() => {
       if (sliderRef.current && isDraggingRef.current) {
@@ -181,14 +165,14 @@ export default function ImageCarousel({
 
   const onTouchEnd = useCallback(() => {
     isDraggingRef.current = false;
-    
+
     if (sliderRef.current) {
       sliderRef.current.style.transition = 'transform 0.3s ease-out';
       sliderRef.current.style.transform = 'translate3d(0px, 0, 0)';
     }
 
     if (touchStartRef.current === null || touchEndRef.current === null) return;
-    
+
     const distance = touchStartRef.current - touchEndRef.current;
     const isLeftSwipe = distance > minSwipeDistance;
     const isRightSwipe = distance < -minSwipeDistance;
@@ -205,7 +189,7 @@ export default function ImageCarousel({
   // No images state
   if (imageList.length === 0) {
     return (
-      <div className={cn("relative bg-[#F9F8F4] rounded-xl overflow-hidden", className)}>
+      <div className={cn("relative bg-[#F9F8F4] dark:bg-[#1a1a1a] rounded-xl overflow-hidden", className)}>
         <div className="aspect-[4/3] flex items-center justify-center">
           <div className="text-center text-[#2F2F2F]/30">
             <ImageOff className="w-16 h-16 mx-auto mb-2" />
@@ -219,15 +203,14 @@ export default function ImageCarousel({
   return (
     <>
       {/* Main Carousel */}
-      <div className={cn("relative bg-[#F9F8F4] rounded-xl overflow-hidden", className)}>
+      <div className={cn("relative bg-[#F9F8F4] dark:bg-[#1a1a1a] rounded-xl overflow-hidden", className)}>
         {/* Main Image */}
         <div
-          className="relative aspect-[4/3] cursor-pointer group select-none"
+          className="relative aspect-[4/3] select-none"
           style={{ touchAction: "pan-y" }}
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
-          onClick={() => !isDraggingRef.current && setIsFullscreen(true)}
         >
           <div
             ref={sliderRef}
@@ -240,15 +223,23 @@ export default function ImageCarousel({
             <LazyImage
               src={imageList[currentIndex]}
               alt={`${title} - Spotçu Dükkanı İstanbul ikinci el eşya fotoğraf ${currentIndex + 1}`}
-              className="w-full h-full object-cover transition-transform duration-300"
+              className="w-full h-full object-cover"
             />
           </div>
-          {/* Zoom indicator */}
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center pointer-events-none">
-            <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 rounded-full p-3 shadow-lg">
-              <ZoomIn className="w-6 h-6 text-[#2F2F2F]" />
-            </div>
-          </div>
+
+          {/* v9.0: Zoom butonu — tıklama olayını açıkça ayırıyoruz */}
+          {onZoomClick && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onZoomClick(currentIndex);
+              }}
+              className="absolute top-3 right-3 z-20 w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center text-white transition-colors backdrop-blur-sm"
+              aria-label="Tam ekran görüntüle"
+            >
+              <ZoomIn className="w-5 h-5 pointer-events-none" />
+            </button>
+          )}
 
           {/* Image counter */}
           {hasMultipleImages && (
@@ -258,13 +249,13 @@ export default function ImageCarousel({
           )}
         </div>
 
-        {/* Navigation Arrows */}
+        {/* v9.0: Navigasyon Okları — HER ZAMAN GÖRÜNÜR (mobil uyumlu) */}
         {hasMultipleImages && (
           <>
             <Button
               variant="ghost"
               size="icon"
-              className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-md text-[#2F2F2F] z-50"
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-md text-[#2F2F2F] z-30"
               onClick={(e) => {
                 e.stopPropagation();
                 goToPrev();
@@ -278,7 +269,7 @@ export default function ImageCarousel({
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-md text-[#2F2F2F] z-50"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-md text-[#2F2F2F] z-30"
               onClick={(e) => {
                 e.stopPropagation();
                 goToNext();
@@ -341,118 +332,7 @@ export default function ImageCarousel({
         </div>
       )}
 
-      {/* Fullscreen Modal */}
-      {isFullscreen && (
-        <div 
-          className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center"
-          onClick={() => setIsFullscreen(false)}
-        >
-          {/* Close button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-4 right-4 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 text-white z-10"
-            onClick={() => setIsFullscreen(false)}
-            aria-label="Kapat"
-          >
-            <X className="w-6 h-6" />
-          </Button>
-
-          {/* Image counter */}
-          {hasMultipleImages && (
-            <div className="absolute top-4 left-4 text-white text-lg font-medium">
-              {currentIndex + 1} / {imageList.length}
-            </div>
-          )}
-
-          {/* Main image */}
-          <div 
-            className="relative max-w-[90vw] max-h-[90vh]"
-            onClick={(e) => e.stopPropagation()}
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
-          >
-            <img
-              src={imageList[currentIndex]}
-              alt={`${title} - Spotçu Dükkanı İstanbul ikinci el eşya fotoğraf ${currentIndex + 1}`}
-              className="max-w-full max-h-[90vh] object-contain"
-            />
-          </div>
-
-          {/* Navigation Arrows */}
-          {hasMultipleImages && (
-            <>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 text-white z-50"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  goToPrev();
-                }}
-                onPointerDown={(e) => e.stopPropagation()}
-                onTouchStart={(e) => e.stopPropagation()}
-                aria-label="Önceki fotoğraf"
-              >
-                <ChevronLeft className="w-8 h-8 pointer-events-none" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 text-white z-50"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  goToNext();
-                }}
-                onPointerDown={(e) => e.stopPropagation()}
-                onTouchStart={(e) => e.stopPropagation()}
-                aria-label="Sonraki fotoğraf"
-              >
-                <ChevronRight className="w-8 h-8 pointer-events-none" />
-              </Button>
-            </>
-          )}
-
-          {/* Thumbnail strip at bottom */}
-          {hasMultipleImages && (
-            <div 
-              className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 p-2 bg-black/50 rounded-xl max-w-[90vw] overflow-x-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {imageList.map((url, index) => (
-                <button
-                  key={index}
-                  onClick={() => goToIndex(index)}
-                  className={cn(
-                    "flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all",
-                    index === currentIndex
-                      ? "border-[#FFD300]"
-                      : "border-transparent opacity-60 hover:opacity-100"
-                  )}
-                >
-                  <img
-                    src={url}
-                    alt={`${title} - Spotçu Dükkanı küçük resim ${index + 1}`}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* v5.0: Preload adjacent images */}
-      <div className="hidden">
-        {imageList.map((url, index) => 
-          preloadedImages.has(index) && index !== currentIndex ? (
-            <link key={index} rel="preload" as="image" href={url} />
-          ) : null
-        )}
-      </div>
+      {/* v9.0: Dahili fullscreen modu KALDIRILDI — tüm fullscreen sorumluluğu ProductLightbox'a devredildi */}
     </>
   );
 }

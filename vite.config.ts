@@ -55,6 +55,7 @@ export default defineConfig(async () => {
       // v6.0: Build optimizations
       target: "es2020",
       cssMinify: true,
+      chunkSizeWarningLimit: 1000,
       rollupOptions: {
         output: {
           manualChunks: {
@@ -63,6 +64,7 @@ export default defineConfig(async () => {
             ui: ["@radix-ui/react-dialog", "@radix-ui/react-tabs", "@radix-ui/react-collapsible"],
             animation: ["framer-motion"],
             trpc: ["@trpc/client", "@trpc/react-query", "@tanstack/react-query"],
+            icons: ["lucide-react"],
           },
         },
       },

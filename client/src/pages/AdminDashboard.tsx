@@ -61,6 +61,7 @@ import {
   TrendingUp,
   MousePointerClick,
   Video,
+  Users,
 } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
@@ -194,6 +195,12 @@ export default function AdminDashboard() {
   const { data: totalViewsData } = trpc.products.totalViews.useQuery(
     undefined,
     { enabled: sessionData?.isLoggedIn === true }
+  );
+
+  // v10.0: Site visit statistics
+  const { data: visitStats } = trpc.stats.getStats.useQuery(
+    { days: 30 },
+    { enabled: sessionData?.isLoggedIn === true, refetchInterval: 60000 }
   );
 
   const logoutMutation = trpc.admin.logout.useMutation({
@@ -1207,6 +1214,58 @@ export default function AdminDashboard() {
               ) : (
                 <p className="text-sm text-[#2F2F2F]/60">Henüz görüntüleme verisi yok</p>
               )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* v10.0: Site Visit Statistics */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+          <Card className="bg-white border-none shadow-md">
+            <CardContent className="p-4 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
+                <Users className="w-6 h-6 text-emerald-600" />
+              </div>
+              <div>
+                <p className="text-sm text-[#2F2F2F]/60">Bugün Ziyaretçi</p>
+                <p className="text-2xl font-bold text-[#2F2F2F]">
+                  {visitStats?.today?.uniqueVisitors?.toLocaleString('tr-TR') || 0}
+                </p>
+                <p className="text-xs text-[#2F2F2F]/40">
+                  {visitStats?.today?.pageViews?.toLocaleString('tr-TR') || 0} sayfa görüntüleme
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-white border-none shadow-md">
+            <CardContent className="p-4 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
+                <BarChart3 className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm text-[#2F2F2F]/60">Son 7 Gün</p>
+                <p className="text-2xl font-bold text-[#2F2F2F]">
+                  {visitStats?.daily?.slice(0, 7).reduce((sum: number, d: any) => sum + d.uniqueVisitors, 0)?.toLocaleString('tr-TR') || 0}
+                </p>
+                <p className="text-xs text-[#2F2F2F]/40">
+                  {visitStats?.daily?.slice(0, 7).reduce((sum: number, d: any) => sum + d.pageViews, 0)?.toLocaleString('tr-TR') || 0} sayfa görüntüleme
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="bg-white border-none shadow-md">
+            <CardContent className="p-4 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm text-[#2F2F2F]/60">Son 30 Gün</p>
+                <p className="text-2xl font-bold text-[#2F2F2F]">
+                  {visitStats?.total?.uniqueVisitors?.toLocaleString('tr-TR') || 0}
+                </p>
+                <p className="text-xs text-[#2F2F2F]/40">
+                  {visitStats?.total?.pageViews?.toLocaleString('tr-TR') || 0} sayfa görüntüleme
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>

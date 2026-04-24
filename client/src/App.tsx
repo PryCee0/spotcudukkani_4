@@ -17,6 +17,7 @@ import { lazy, Suspense } from "react";
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const Contact = lazy(() => import("./pages/Contact"));
+const SellPage = lazy(() => import("./pages/SellPage"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 
@@ -35,6 +36,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/hakkimizda" component={About} />
+        <Route path="/esya-sat" component={SellPage} />
         <Route path="/urunler" component={Products} />
         <Route path="/urunler/mobilya" component={ProductsMobilya} />
         <Route path="/urunler/beyaz-esya" component={ProductsBeyazEsya} />

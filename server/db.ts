@@ -1,6 +1,6 @@
-import { eq, desc, and, asc, sql, sum } from "drizzle-orm";
+import { eq, desc, and, asc, sql, sum, ne, or, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, products, InsertProduct, Product, categories, InsertCategory, Category, blogPosts, InsertBlogPost, BlogPost } from "../drizzle/schema";
+import { InsertUser, users, products, InsertProduct, Product, categories, InsertCategory, Category, blogPosts, InsertBlogPost, BlogPost, siteVisits, visitorFingerprints } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -474,5 +474,155 @@ export async function deleteBlogPost(id: number) {
   } catch (error) {
     console.error("[Database] Failed to delete blog post:", error);
     throw error;
+  }
+}
+
+// =============================================
+// v10.0: Site Visit Analytics
+// =============================================
+
+export async function recordVisit(fingerprint: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+  try {
+    // Upsert daily page view count
+    await db.execute(sql.raw(`
+      INSERT INTO site_visits (visitDate, pageViews, uniqueVisitors)
+      VALUES ('${today}', 1, 0)
+      ON DUPLICATE KEY UPDATE pageViews = pageViews + 1
+    `));
+
+    // Try to insert fingerprint — if unique constraint fails, it's a returning visitor
+    try {
+      await db.execute(sql.raw(`
+        INSERT INTO visitor_fingerprints (fingerprint, visitDate)
+        VALUES ('${fingerprint}', '${today}')
+      `));
+      // If insert succeeded, it's a new unique visitor today
+      await db.execute(sql.raw(`
+        UPDATE site_visits SET uniqueVisitors = uniqueVisitors + 1
+        WHERE visitDate = '${today}'
+      `));
+    } catch {
+      // Duplicate — returning visitor today, do nothing
+    }
+  } catch (error) {
+    console.error("[Analytics] Failed to record visit:", error);
+  }
+}
+
+export async function getVisitStats(days: number = 30): Promise<{
+  today: { pageViews: number; uniqueVisitors: number };
+  total: { pageViews: number; uniqueVisitors: number };
+  daily: Array<{ date: string; pageViews: number; uniqueVisitors: number }>;
+}> {
+  const db = await getDb();
+  const defaultResult = {
+    today: { pageViews: 0, uniqueVisitors: 0 },
+    total: { pageViews: 0, uniqueVisitors: 0 },
+    daily: [],
+  };
+  if (!db) return defaultResult;
+
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    const startDateStr = startDate.toISOString().slice(0, 10);
+
+    // Get daily stats for the period
+    const dailyResult = await db
+      .select()
+      .from(siteVisits)
+      .where(sql`${siteVisits.visitDate} >= ${startDateStr}`)
+      .orderBy(desc(siteVisits.visitDate));
+
+    const daily = dailyResult.map((row) => ({
+      date: row.visitDate,
+      pageViews: row.pageViews,
+      uniqueVisitors: row.uniqueVisitors,
+    }));
+
+    const todayData = daily.find((d) => d.date === today) || {
+      pageViews: 0,
+      uniqueVisitors: 0,
+    };
+
+    const total = daily.reduce(
+      (acc, d) => ({
+        pageViews: acc.pageViews + d.pageViews,
+        uniqueVisitors: acc.uniqueVisitors + d.uniqueVisitors,
+      }),
+      { pageViews: 0, uniqueVisitors: 0 }
+    );
+
+    return { today: todayData, total, daily };
+  } catch (error) {
+    console.error("[Analytics] Failed to get visit stats:", error);
+    return defaultResult;
+  }
+}
+
+// =============================================
+// v10.0: Related Products (Ürün Önerisi)
+// =============================================
+
+export async function getRelatedProducts(
+  productId: number,
+  category: string,
+  subCategory: string | null,
+  limit: number = 3
+): Promise<Product[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    let results: Product[] = [];
+
+    // 1. Önce aynı alt kategoriden dene
+    if (subCategory) {
+      results = await db
+        .select()
+        .from(products)
+        .where(
+          and(
+            eq(products.isActive, 1),
+            eq(products.subCategory, subCategory),
+            ne(products.id, productId)
+          )
+        )
+        .orderBy(sql`RAND()`)
+        .limit(limit);
+    }
+
+    // 2. Yeterli değilse aynı kategoriden tamamla
+    if (results.length < limit) {
+      const existingIds = results.map((r) => r.id);
+      existingIds.push(productId); // Mevcut ürünü de hariç tut
+
+      const remaining = limit - results.length;
+      const moreResults = await db
+        .select()
+        .from(products)
+        .where(
+          and(
+            eq(products.isActive, 1),
+            eq(products.category, category),
+            sql`${products.id} NOT IN (${sql.raw(existingIds.join(','))})`
+          )
+        )
+        .orderBy(sql`RAND()`)
+        .limit(remaining);
+
+      results = [...results, ...moreResults];
+    }
+
+    return results;
+  } catch (error) {
+    console.error("[Database] Failed to get related products:", error);
+    return [];
   }
 }

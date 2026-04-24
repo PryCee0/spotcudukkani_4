@@ -1,11 +1,20 @@
-import { useState, useCallback, useEffect, memo } from "react";
+import { useState, useCallback, useEffect, useRef, memo } from "react";
 import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
+
+/**
+ * v9.0: Tamamen yeniden yazıldı.
+ * - onIndexChange callback ile dış bileşenle senkronizasyon
+ * - Touch swipe desteği
+ * - Çift katmanlı lightbox çakışması çözüldü (ImageCarousel'ın fullscreen'i kaldırıldı)
+ * - Yön tuşları her zaman görünür ve çalışır
+ */
 
 interface ProductLightboxProps {
     images: Array<{ url: string; key: string }>;
     initialIndex?: number;
     isOpen: boolean;
     onClose: () => void;
+    onIndexChange?: (index: number) => void;
     title?: string;
 }
 
@@ -14,6 +23,7 @@ function ProductLightbox({
     initialIndex = 0,
     isOpen,
     onClose,
+    onIndexChange,
     title = "Ürün",
 }: ProductLightboxProps) {
     const [currentIndex, setCurrentIndex] = useState(initialIndex);
@@ -21,6 +31,10 @@ function ProductLightbox({
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
+    // Touch swipe refs
+    const touchStartRef = useRef<number | null>(null);
+    const touchEndRef = useRef<number | null>(null);
 
     // Reset when opening
     useEffect(() => {
@@ -41,17 +55,22 @@ function ProductLightbox({
         };
     }, [isOpen]);
 
-    const goNext = useCallback(() => {
-        setCurrentIndex((prev) => (prev + 1) % images.length);
+    const updateIndex = useCallback((newIndex: number) => {
+        setCurrentIndex(newIndex);
         setScale(1);
         setPosition({ x: 0, y: 0 });
-    }, [images.length]);
+        onIndexChange?.(newIndex);
+    }, [onIndexChange]);
+
+    const goNext = useCallback(() => {
+        if (images.length <= 1) return;
+        updateIndex((currentIndex + 1) % images.length);
+    }, [images.length, currentIndex, updateIndex]);
 
     const goPrev = useCallback(() => {
-        setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
-        setScale(1);
-        setPosition({ x: 0, y: 0 });
-    }, [images.length]);
+        if (images.length <= 1) return;
+        updateIndex((currentIndex - 1 + images.length) % images.length);
+    }, [images.length, currentIndex, updateIndex]);
 
     const toggleZoom = useCallback(() => {
         if (scale > 1) {
@@ -69,12 +88,15 @@ function ProductLightbox({
         const handleKeyDown = (e: KeyboardEvent) => {
             switch (e.key) {
                 case "ArrowRight":
+                    e.preventDefault();
                     goNext();
                     break;
                 case "ArrowLeft":
+                    e.preventDefault();
                     goPrev();
                     break;
                 case "Escape":
+                    e.preventDefault();
                     onClose();
                     break;
                 case "+":
@@ -95,10 +117,34 @@ function ProductLightbox({
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [isOpen, goNext, goPrev, onClose]);
 
+    // Touch swipe support
+    const onTouchStart = useCallback((e: React.TouchEvent) => {
+        if (scale > 1) return; // Zoom modunda swipe yapma
+        touchStartRef.current = e.touches[0].clientX;
+        touchEndRef.current = null;
+    }, [scale]);
+
+    const onTouchMove = useCallback((e: React.TouchEvent) => {
+        if (scale > 1) return;
+        touchEndRef.current = e.touches[0].clientX;
+    }, [scale]);
+
+    const onTouchEnd = useCallback(() => {
+        if (scale > 1) return;
+        if (touchStartRef.current === null || touchEndRef.current === null) return;
+        const distance = touchStartRef.current - touchEndRef.current;
+        const minSwipe = 50;
+        if (distance > minSwipe) goNext();
+        else if (distance < -minSwipe) goPrev();
+        touchStartRef.current = null;
+        touchEndRef.current = null;
+    }, [scale, goNext, goPrev]);
+
     // Mouse/touch drag for panning when zoomed
     const handlePointerDown = useCallback(
         (e: React.PointerEvent) => {
             if (scale <= 1) return;
+            e.preventDefault();
             setIsDragging(true);
             setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
         },
@@ -123,16 +169,17 @@ function ProductLightbox({
     if (!isOpen || images.length === 0) return null;
 
     const currentImage = images[currentIndex];
+    if (!currentImage) return null;
 
     return (
         <div
-            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex flex-col"
+            className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-sm flex flex-col"
             onClick={(e) => {
                 if (e.target === e.currentTarget) onClose();
             }}
         >
             {/* Top Bar */}
-            <div className="flex items-center justify-between px-4 md:px-6 py-3 text-white/80">
+            <div className="flex items-center justify-between px-4 md:px-6 py-3 text-white/80 shrink-0">
                 <div className="flex items-center gap-3">
                     <span className="text-sm font-medium">
                         {currentIndex + 1} / {images.length}
@@ -152,7 +199,10 @@ function ProductLightbox({
                         )}
                     </button>
                     <button
-                        onClick={onClose}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onClose();
+                        }}
                         className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
                         aria-label="Kapat"
                     >
@@ -168,6 +218,9 @@ function ProductLightbox({
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
                 onPointerLeave={handlePointerUp}
+                onTouchStart={onTouchStart}
+                onTouchMove={onTouchMove}
+                onTouchEnd={onTouchEnd}
                 style={{ cursor: scale > 1 ? (isDragging ? "grabbing" : "grab") : "default" }}
             >
                 <img
@@ -181,7 +234,7 @@ function ProductLightbox({
                     onDoubleClick={toggleZoom}
                 />
 
-                {/* Navigation Arrows */}
+                {/* v9.0: Navigasyon Okları — z-index yükseltildi, her zaman görünür */}
                 {images.length > 1 && (
                     <>
                         <button
@@ -191,7 +244,7 @@ function ProductLightbox({
                             }}
                             onPointerDown={(e) => e.stopPropagation()}
                             onTouchStart={(e) => e.stopPropagation()}
-                            className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/10 hover:bg-white/25 flex items-center justify-center text-white transition-all backdrop-blur-sm z-50"
+                            className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/15 hover:bg-white/30 flex items-center justify-center text-white transition-all backdrop-blur-sm z-[210]"
                             aria-label="Önceki fotoğraf"
                         >
                             <ChevronLeft className="w-6 h-6 md:w-7 md:h-7 pointer-events-none" />
@@ -203,7 +256,7 @@ function ProductLightbox({
                             }}
                             onPointerDown={(e) => e.stopPropagation()}
                             onTouchStart={(e) => e.stopPropagation()}
-                            className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/10 hover:bg-white/25 flex items-center justify-center text-white transition-all backdrop-blur-sm z-50"
+                            className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/15 hover:bg-white/30 flex items-center justify-center text-white transition-all backdrop-blur-sm z-[210]"
                             aria-label="Sonraki fotoğraf"
                         >
                             <ChevronRight className="w-6 h-6 md:w-7 md:h-7 pointer-events-none" />
@@ -214,14 +267,13 @@ function ProductLightbox({
 
             {/* Thumbnail Strip */}
             {images.length > 1 && (
-                <div className="flex items-center justify-center gap-2 px-4 py-3 overflow-x-auto">
+                <div className="flex items-center justify-center gap-2 px-4 py-3 overflow-x-auto shrink-0">
                     {images.map((img, index) => (
                         <button
                             key={img.key}
-                            onClick={() => {
-                                setCurrentIndex(index);
-                                setScale(1);
-                                setPosition({ x: 0, y: 0 });
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                updateIndex(index);
                             }}
                             className={`w-14 h-14 md:w-16 md:h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${index === currentIndex
                                     ? "border-[#FFD300] opacity-100 scale-105"

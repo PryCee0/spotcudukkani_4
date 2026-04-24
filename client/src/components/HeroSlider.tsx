@@ -42,19 +42,19 @@ function HeroSlider() {
   }, []);
 
   useEffect(() => {
-    const interval = setInterval(nextSlide, 5000);
+    const interval = setInterval(nextSlide, 3500);
     return () => clearInterval(interval);
   }, [nextSlide]);
 
   const whatsappLink = `https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent("Merhaba, bilgi almak istiyorum.")}`;
 
   return (
-    <section className="relative h-[550px] md:h-[700px] lg:h-[800px] xl:h-[850px] overflow-hidden">
+    <section className="relative h-[80vh] min-h-[500px] max-h-[900px] overflow-hidden">
       {/* Slides */}
       {slides.map((slide, index) => (
         <div
           key={slide.id}
-          className={`absolute inset-0 transition-opacity duration-700 ${
+          className={`absolute inset-0 transition-opacity duration-500 ${
             index === currentSlide ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
         >
@@ -73,10 +73,10 @@ function HeroSlider() {
           <div className={`absolute inset-0 bg-gradient-to-r ${slide.bgGradient}`} />
 
           {/* Content */}
-          <div className="relative h-full container flex items-center">
-            <div className="max-w-3xl xl:max-w-4xl text-white">
+          <div className="relative h-full container flex flex-col justify-center items-start">
+            <div className="max-w-3xl xl:max-w-4xl text-white -mt-16 md:-mt-24">
               <h1
-                className={`text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-5 lg:mb-6 leading-tight transition-all duration-700 ${
+                className={`text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-5 lg:mb-6 leading-tight transition-all duration-500 ${
                   index === currentSlide
                     ? "translate-y-0 opacity-100"
                     : "translate-y-8 opacity-0"
@@ -85,7 +85,7 @@ function HeroSlider() {
                 {slide.title}
               </h1>
               <p
-                className={`text-xl md:text-2xl lg:text-3xl text-gray-200 mb-10 lg:mb-12 transition-all duration-700 delay-100 ${
+                className={`text-xl md:text-2xl lg:text-3xl text-gray-200 mb-10 lg:mb-12 transition-all duration-500 delay-75 ${
                   index === currentSlide
                     ? "translate-y-0 opacity-100"
                     : "translate-y-8 opacity-0"
@@ -94,7 +94,7 @@ function HeroSlider() {
                 {slide.subtitle}
               </p>
               <div
-                className={`flex flex-wrap gap-5 lg:gap-6 transition-all duration-700 delay-200 ${
+                className={`flex flex-wrap gap-5 lg:gap-6 transition-all duration-500 delay-150 ${
                   index === currentSlide
                     ? "translate-y-0 opacity-100"
                     : "translate-y-8 opacity-0"
@@ -139,8 +139,8 @@ function HeroSlider() {
         <ChevronRight className="w-6 h-6 md:w-7 md:h-7 lg:w-8 lg:h-8" />
       </button>
 
-      {/* Dots */}
-      <div className="absolute bottom-8 lg:bottom-10 left-1/2 -translate-x-1/2 flex gap-3">
+      {/* Dots - Guaranteed to be visible ABOVE the TrustBanner */}
+      <div className="absolute bottom-16 md:bottom-20 lg:bottom-24 left-1/2 -translate-x-1/2 flex gap-3 z-10">
         {slides.map((_, index) => (
           <button
             key={index}

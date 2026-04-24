@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MessageCircle, X, Phone, MapPin, Clock, Share2, Check, Copy, ZoomIn } from "lucide-react";
+import { MessageCircle, X, Phone, MapPin, Clock, Share2, Check } from "lucide-react";
 import ImageCarousel from "./ImageCarousel";
 import ProductLightbox from "./ProductLightbox";
 import { toast } from "sonner";
@@ -50,6 +50,8 @@ interface ProductDetailModalProps {
   } | null;
   // v5.0: Deep linking support
   enableDeepLink?: boolean;
+  // v10.0: Callback for selecting a related product
+  onSelectProduct?: (product: any) => void;
 }
 
 export default function ProductDetailModal({
@@ -57,24 +59,55 @@ export default function ProductDetailModal({
   onClose,
   product,
   enableDeepLink = true,
+  onSelectProduct,
 }: ProductDetailModalProps) {
   const [copied, setCopied] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  // v9.0: Carousel ve Lightbox arasında senkronize index
+  const [carouselIndex, setCarouselIndex] = useState(0);
+
+  // v9.0: pushState'in bu modal tarafından yapılıp yapılmadığını izle
+  const didPushStateRef = useRef(false);
 
   // v6.0: Increment view count mutation
   const incrementViewMutation = trpc.products.incrementView.useMutation();
 
-  // v6.0: Update URL when modal opens (deep linking) - pushState for proper back button
+  // v10.0: Related products query
+  const relatedProducts = trpc.products.related.useQuery(
+    {
+      productId: product?.id ?? 0,
+      category: product?.category ?? "mobilya",
+      subCategory: product?.subCategory ?? null,
+      limit: 3,
+    },
+    {
+      enabled: isOpen && !!product?.id,
+      staleTime: 5 * 60 * 1000, // 5 dakika cache
+    }
+  );
+
+  // v9.0: Deep linking — replaceState kullanarak çift history entry sorununu çöz
   useEffect(() => {
     if (enableDeepLink && isOpen && product?.id) {
       const currentUrl = new URL(window.location.href);
       currentUrl.searchParams.set("id", product.id.toString());
-      window.history.pushState({ productId: product.id }, "", currentUrl.toString());
+      window.history.replaceState({ productId: product.id }, "", currentUrl.toString());
+      didPushStateRef.current = true;
     }
-    // v6.0: Increment view count when modal opens
+    // v9.0: View count'u idle callback ile tetikle (modal animasyonuyla yarışmasın)
     if (isOpen && product?.id) {
-      incrementViewMutation.mutate({ id: product.id });
+      const cb = () => incrementViewMutation.mutate({ id: product.id });
+      if (typeof requestIdleCallback !== "undefined") {
+        requestIdleCallback(cb, { timeout: 2000 });
+      } else {
+        setTimeout(cb, 500);
+      }
+    }
+    // Reset carousel index
+    if (isOpen) {
+      setCarouselIndex(0);
+      setLightboxIndex(0);
     }
   }, [isOpen, product?.id, enableDeepLink]);
 
@@ -90,8 +123,8 @@ export default function ProductDetailModal({
     return () => window.removeEventListener("popstate", handlePopState);
   }, [isOpen, enableDeepLink, onClose]);
 
-  // v6.0: Remove product ID from URL when modal closes
-  const handleClose = () => {
+  // v9.0: Tek tutarlı kapatma fonksiyonu
+  const handleClose = useCallback(() => {
     if (enableDeepLink) {
       const currentUrl = new URL(window.location.href);
       if (currentUrl.searchParams.has("id")) {
@@ -99,8 +132,10 @@ export default function ProductDetailModal({
         window.history.replaceState(null, "", currentUrl.toString());
       }
     }
+    didPushStateRef.current = false;
+    setLightboxOpen(false);
     onClose();
-  };
+  }, [enableDeepLink, onClose]);
 
   if (!product) return null;
 
@@ -178,8 +213,12 @@ export default function ProductDetailModal({
             url={getShareUrl()}
           />
         )}
-        <DialogContent aria-describedby={undefined} className="max-w-3xl max-h-[95vh] overflow-y-auto p-0 gap-0">
-          {/* v8.0: Absolute close button - outside normal document flow */}
+        <DialogContent
+          aria-describedby={undefined}
+          className="max-w-3xl max-h-[95vh] overflow-y-auto p-0 gap-0"
+          showCloseButton={false}
+        >
+          {/* v9.0: Tek kapatma butonu — Radix built-in kaldırıldı */}
           <Button
             variant="ghost"
             size="icon"
@@ -236,27 +275,20 @@ export default function ProductDetailModal({
 
           {/* Content */}
           <div className="px-6 py-6">
-            {/* Image Carousel */}
-            <div className="mb-6 relative group/img">
-              <div
-                className="cursor-zoom-in"
-                onClick={() => {
-                  setLightboxIndex(0);
+            {/* v9.0: Image Carousel — sarmalayan zoom div KALDIRILDI, zoom butonu Carousel içinde */}
+            <div className="mb-6">
+              <ImageCarousel
+                images={product.images}
+                fallbackImage={product.imageUrl}
+                title={product.title}
+                showThumbnails={true}
+                currentIndex={carouselIndex}
+                onIndexChange={setCarouselIndex}
+                onZoomClick={(index) => {
+                  setLightboxIndex(index);
                   setLightboxOpen(true);
                 }}
-              >
-                <ImageCarousel
-                  images={product.images}
-                  fallbackImage={product.imageUrl}
-                  title={product.title}
-                  showThumbnails={true}
-                />
-              </div>
-              {/* Zoom hint */}
-              <div className="absolute top-3 right-3 bg-black/60 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5 opacity-0 group-hover/img:opacity-100 transition-opacity pointer-events-none">
-                <ZoomIn className="w-3.5 h-3.5" />
-                Tam Ekran
-              </div>
+              />
             </div>
 
             {/* v8.0: Product Video */}
@@ -334,6 +366,47 @@ export default function ProductDetailModal({
             </div>
           </div>
 
+          {/* v10.0: Benzer Ürünler */}
+          {relatedProducts.data && relatedProducts.data.length > 0 && (
+            <div className="border-t border-border px-6 py-5">
+              <h3 className="text-base font-bold text-foreground mb-3">Benzer Ürünler</h3>
+              <div className="grid grid-cols-3 gap-3">
+                {relatedProducts.data.map((rp: any) => {
+                  const rpImage = rp.images
+                    ? (typeof rp.images === 'string' ? JSON.parse(rp.images) : rp.images)?.[0]?.url
+                    : rp.imageUrl;
+                  return (
+                    <button
+                      key={rp.id}
+                      onClick={() => {
+                        if (onSelectProduct) {
+                          onSelectProduct(rp);
+                        }
+                      }}
+                      className="group text-left rounded-xl overflow-hidden border border-border/50 hover:border-[#FFD300]/50 hover:shadow-md transition-all"
+                    >
+                      <div className="aspect-square bg-muted overflow-hidden">
+                        {rpImage ? (
+                          <img
+                            src={rpImage}
+                            alt={rp.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-muted-foreground text-2xl">📦</div>
+                        )}
+                      </div>
+                      <div className="p-2">
+                        <p className="text-xs font-medium text-foreground line-clamp-2 leading-tight">{rp.title}</p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Footer Note */}
           <div className="border-t border-border px-6 py-4 bg-muted/50">
             <p className="text-sm text-muted-foreground text-center">
@@ -343,12 +416,16 @@ export default function ProductDetailModal({
         </DialogContent>
       </Dialog>
 
-      {/* Full-screen Lightbox */}
+      {/* v9.0: Full-screen Lightbox — senkronize index ile */}
       <ProductLightbox
         images={allImages}
         initialIndex={lightboxIndex}
         isOpen={lightboxOpen}
         onClose={() => setLightboxOpen(false)}
+        onIndexChange={(index) => {
+          setCarouselIndex(index);
+          setLightboxIndex(index);
+        }}
         title={product.title}
       />
     </>

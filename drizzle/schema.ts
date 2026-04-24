@@ -93,3 +93,29 @@ export const blogPosts = mysqlTable("blog_posts", {
 
 export type BlogPost = typeof blogPosts.$inferSelect;
 export type InsertBlogPost = typeof blogPosts.$inferInsert;
+
+/**
+ * v10.0: Site ziyaret istatistikleri
+ * Günlük sayfa görüntüleme ve benzersiz ziyaretçi sayacı
+ */
+export const siteVisits = mysqlTable("site_visits", {
+  id: int("id").autoincrement().primaryKey(),
+  visitDate: varchar("visitDate", { length: 10 }).notNull().unique(), // YYYY-MM-DD format
+  pageViews: int("pageViews").default(0).notNull(),
+  uniqueVisitors: int("uniqueVisitors").default(0).notNull(),
+});
+
+export type SiteVisit = typeof siteVisits.$inferSelect;
+export type InsertSiteVisit = typeof siteVisits.$inferInsert;
+
+/**
+ * v10.0: Ziyaretçi parmak izi (günlük tekil ziyaretçi takibi)
+ * IP hash + User-Agent hash — GDPR uyumlu, kişisel veri saklanmaz
+ */
+export const visitorFingerprints = mysqlTable("visitor_fingerprints", {
+  id: int("id").autoincrement().primaryKey(),
+  fingerprint: varchar("fingerprint", { length: 64 }).notNull(),
+  visitDate: varchar("visitDate", { length: 10 }).notNull(), // YYYY-MM-DD
+});
+
+export type VisitorFingerprint = typeof visitorFingerprints.$inferSelect;

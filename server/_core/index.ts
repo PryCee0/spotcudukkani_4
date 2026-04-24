@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import helmet from "helmet";
+import compression from "compression";
 import { createServer } from "http";
 import path from "path";
 import fs from "fs";
@@ -73,7 +74,20 @@ function serveStaticFiles(app: express.Express) {
     console.log(`[Static] Serving files from: ${distPath}`);
   }
 
-  app.use(express.static(distPath));
+  // v9.0: JS/CSS/font varlıkları için 1 yıl immutable cache
+  app.use(express.static(distPath, {
+    maxAge: '1y',
+    immutable: true,
+    etag: true,
+    setHeaders: (res, filePath) => {
+      // HTML dosyalarını cache'leme (SPA routing için)
+      if (filePath.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-cache');
+      } else {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+    },
+  }));
 
   // fall through to index.html if the file doesn't exist (SPA routing)
   app.use("*", (_req, res) => {
@@ -94,6 +108,16 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+  // v9.0: Compression middleware — gzip/brotli sıkıştırma (~%60-70 transfer azalması)
+  app.use(compression({
+    level: 6,
+    threshold: 1024, // 1KB altı dosyaları sıkıştırma
+    filter: (req, res) => {
+      if (req.headers['x-no-compression']) return false;
+      return compression.filter(req, res);
+    },
+  }));
 
   // v7.0: Security headers via helmet
   app.use(helmet({
@@ -128,6 +152,7 @@ async function startServer() {
     const staticPages = [
       { url: "/", priority: "1.0", changefreq: "daily" },
       { url: "/urunler", priority: "0.9", changefreq: "daily" },
+      { url: "/esya-sat", priority: "0.8", changefreq: "monthly" },
       { url: "/hakkimizda", priority: "0.7", changefreq: "monthly" },
       { url: "/iletisim", priority: "0.7", changefreq: "monthly" },
       { url: "/blog", priority: "0.8", changefreq: "weekly" },
@@ -147,7 +172,7 @@ async function startServer() {
     try {
       const dbConn = await getDb();
       if (dbConn) {
-        const products = await dbConn.execute(`SELECT id, updated_at FROM products WHERE 1=1 ORDER BY id DESC LIMIT 500`);
+        const products = await dbConn.execute(`SELECT id, updatedAt FROM products WHERE 1=1 ORDER BY id DESC LIMIT 500`);
         if (Array.isArray(products) && products.length > 0) {
           const rows = (products as any)[0] || products;
           if (Array.isArray(rows)) {
@@ -155,7 +180,7 @@ async function startServer() {
               urls.push(`
   <url>
     <loc>${siteUrl}/urunler?id=${p.id}</loc>
-    <lastmod>${p.updated_at ? new Date(p.updated_at).toISOString().split("T")[0] : now}</lastmod>
+    <lastmod>${p.updatedAt ? new Date(p.updatedAt).toISOString().split("T")[0] : now}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>`);
@@ -171,7 +196,7 @@ async function startServer() {
     try {
       const dbConn = await getDb();
       if (dbConn) {
-        const posts = await dbConn.execute(`SELECT slug, updated_at FROM blog_posts WHERE is_published = 1 ORDER BY id DESC LIMIT 500`);
+        const posts = await dbConn.execute(`SELECT slug, updatedAt FROM blog_posts WHERE is_published = 1 ORDER BY id DESC LIMIT 500`);
         if (Array.isArray(posts) && posts.length > 0) {
           const rows = (posts as any)[0] || posts;
           if (Array.isArray(rows)) {
@@ -179,7 +204,7 @@ async function startServer() {
               urls.push(`
   <url>
     <loc>${siteUrl}/blog/${p.slug}</loc>
-    <lastmod>${p.updated_at ? new Date(p.updated_at).toISOString().split("T")[0] : now}</lastmod>
+    <lastmod>${p.updatedAt ? new Date(p.updatedAt).toISOString().split("T")[0] : now}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>`);
@@ -209,7 +234,15 @@ async function startServer() {
   const uploadDir = getUploadDirPath();
 
   // Primary: Serve from UPLOAD_DIR (or default public/uploads)
-  app.use("/uploads", express.static(uploadDir));
+  // v9.0: 7 gün cache header — görseller sık değişmiyor
+  app.use("/uploads", express.static(uploadDir, {
+    maxAge: '7d',
+    etag: true,
+    lastModified: true,
+    setHeaders: (res) => {
+      res.setHeader('Cache-Control', 'public, max-age=604800');
+    },
+  }));
   console.log(`[Uploads] Primary serving from: ${uploadDir}`);
 
   // Fallback paths for compatibility

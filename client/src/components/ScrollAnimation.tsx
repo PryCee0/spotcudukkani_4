@@ -40,6 +40,7 @@ const getVariants = (direction: AnimationDirection): { hidden: Variant; visible:
       break;
     case "fade":
     default:
+      // Just opacity
       break;
   }
 
@@ -55,20 +56,25 @@ export default function ScrollAnimation({
   once = true,
   amount = 0.15,
 }: ScrollAnimationProps) {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef(null);
   const isInView = useInView(ref, { once, amount });
-  const variants = getVariants(direction);
+  const { hidden, visible } = getVariants(direction);
 
   return (
     <motion.div
       ref={ref}
       initial="hidden"
       animate={isInView ? "visible" : "hidden"}
-      variants={variants}
-      transition={{
-        duration,
-        delay,
-        ease: [0.25, 0.1, 0.25, 1],
+      variants={{
+        hidden,
+        visible: {
+          ...visible,
+          transition: {
+            duration,
+            delay,
+            ease: [0.25, 0.1, 0.25, 1], // Custom ease-out
+          },
+        },
       }}
       className={className}
     >
@@ -93,7 +99,7 @@ export function StaggerContainer({
   once = true,
   amount = 0.15,
 }: StaggerContainerProps) {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef(null);
   const isInView = useInView(ref, { once, amount });
 
   return (
@@ -128,15 +134,18 @@ export function StaggerItem({
   direction = "up",
   className = "",
 }: StaggerItemProps) {
-  const variants = getVariants(direction);
+  const { hidden, visible } = getVariants(direction);
 
   return (
     <motion.div
       variants={{
-        hidden: variants.hidden,
+        hidden,
         visible: {
-          ...variants.visible,
-          transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] },
+          ...visible,
+          transition: {
+            duration: 0.5,
+            ease: [0.25, 0.1, 0.25, 1],
+          },
         },
       }}
       className={className}

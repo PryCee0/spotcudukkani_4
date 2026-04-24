@@ -78,6 +78,25 @@ export function validateVideoMagicBytes(buffer: Buffer): boolean {
 }
 
 /**
+ * v10.0: SEO-friendly dosya adı oluşturma
+ * Türkçe karakterleri temizler ve slug formatına çevirir
+ * Örnek: "Mavi Köşe Koltuk Takımı" → "mavi-kose-koltuk-takimi"
+ */
+function createSeoSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/ğ/g, 'g')
+    .replace(/ü/g, 'u')
+    .replace(/ş/g, 's')
+    .replace(/ı/g, 'i')
+    .replace(/ö/g, 'o')
+    .replace(/ç/g, 'c')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .substring(0, 60); // Dosya adı çok uzun olmasın
+}
+
+/**
  * v5.1: Dynamic upload directory with environment variable support
  * 
  * UPLOAD_DIR environment variable allows configuring persistent storage
@@ -153,7 +172,8 @@ export function getUploadDirPath(): string {
 export async function localStoragePut(
   buffer: Buffer,
   mimeType: string,
-  prefix: string = "uploads"
+  prefix: string = "uploads",
+  seoTitle?: string
 ): Promise<{ key: string; url: string }> {
   // v7.0: Security - Validate file size
   if (buffer.length > MAX_IMAGE_SIZE) {
@@ -178,8 +198,11 @@ export async function localStoragePut(
   // Get file extension from mime type
   const ext = getExtensionFromMimeType(mimeType);
 
-  // Generate unique filename
-  const filename = `${prefix}-${nanoid()}.${ext}`;
+  // v10.0: SEO-friendly filename — başlık varsa slug'dan oluştur
+  const seoSlug = seoTitle ? createSeoSlug(seoTitle) : null;
+  const filename = seoSlug
+    ? `${seoSlug}-${nanoid(6)}.${ext}`
+    : `${prefix}-${nanoid()}.${ext}`;
   const filePath = path.join(uploadDir, filename);
 
   // Write file to disk
@@ -206,7 +229,8 @@ export async function localStoragePut(
 export async function localStoragePutVideo(
   buffer: Buffer,
   mimeType: string,
-  prefix: string = "videos"
+  prefix: string = "videos",
+  seoTitle?: string
 ): Promise<{ key: string; url: string }> {
   // Validate video file size (50MB limit)
   if (buffer.length > MAX_VIDEO_SIZE) {
@@ -226,7 +250,11 @@ export async function localStoragePutVideo(
   ensureUploadDir();
   const uploadDir = getUploadDirCached();
   const ext = getExtensionFromMimeType(mimeType);
-  const filename = `${prefix}-${nanoid()}.${ext}`;
+  // v10.0: SEO-friendly video filename
+  const seoSlug = seoTitle ? createSeoSlug(seoTitle) : null;
+  const filename = seoSlug
+    ? `${seoSlug}-video-${nanoid(6)}.${ext}`
+    : `${prefix}-${nanoid()}.${ext}`;
   const filePath = path.join(uploadDir, filename);
 
   await fs.promises.writeFile(filePath, buffer);

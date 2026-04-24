@@ -13,6 +13,7 @@ const INSTAGRAM_URL = "https://instagram.com/spotcudukkani.comm";
 const quickLinks = [
   { href: "/", label: "Anasayfa" },
   { href: "/hakkimizda", label: "Hakkımızda" },
+  { href: "/esya-sat", label: "Eşya Sat" },
   { href: "/urunler", label: "Ürünlerimiz" },
   { href: "/urunler?category=mobilya", label: "2.El Mobilya" },
   { href: "/urunler?category=beyaz_esya", label: "2.El Beyaz Eşya" },
@@ -57,7 +58,7 @@ export default function Footer() {
                   e.currentTarget.style.display = 'none';
                 }}
               />
-              <span className="text-2xl lg:text-3xl font-extrabold">
+              <span className="font-brand text-2xl lg:text-3xl">
                 Spotçu <span className="text-[#FFD300]">Dükkanı</span>
               </span>
             </Link>
