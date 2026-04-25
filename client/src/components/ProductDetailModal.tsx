@@ -217,16 +217,18 @@ export default function ProductDetailModal({
           aria-describedby={undefined}
           className="max-w-3xl max-h-[95vh] overflow-y-auto p-0 gap-0"
           showCloseButton={false}
+          style={{ fontSize: '1.25rem' }}  /* v11.0: %80 ölçeklemeyi dengele — modal içi 100% boyut */
         >
           {/* v9.0: Tek kapatma butonu — Radix built-in kaldırıldı */}
+          {/* v11.0: Kapatma butonu — mobil erişilebilirlik için büyütüldü */}
           <Button
             variant="ghost"
             size="icon"
             onClick={handleClose}
-            className="absolute top-3 right-3 z-50 rounded-full bg-background/95 hover:bg-muted shadow-md w-12 h-12 border border-border"
+            className="absolute top-3 right-3 z-50 rounded-full bg-background/95 hover:bg-muted shadow-md w-14 h-14 border border-border"
             aria-label="Kapat"
           >
-            <X className="w-6 h-6" />
+            <X className="w-7 h-7" />
           </Button>
 
           {/* Header */}
@@ -251,22 +253,24 @@ export default function ProductDetailModal({
                     </Badge>
                   )}
                 </div>
-                <DialogTitle className="text-xl md:text-2xl font-bold text-foreground">
+                {/* v11.0: Başlık büyütüldü */}
+                <DialogTitle className="text-2xl md:text-3xl font-bold text-foreground">
                   {product.title}
                 </DialogTitle>
               </div>
               <div className="flex items-center gap-2">
+                {/* v11.0: Paylaş butonu — mobil erişilebilirlik için büyütüldü */}
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="w-9 h-9 rounded-full"
+                  className="w-12 h-12 rounded-full"
                   onClick={handleShare}
                   aria-label="Paylaş"
                 >
                   {copied ? (
-                    <Check className="w-5 h-5 text-green-500" />
+                    <Check className="w-6 h-6 text-green-500" />
                   ) : (
-                    <Share2 className="w-5 h-5" />
+                    <Share2 className="w-6 h-6" />
                   )}
                 </Button>
               </div>
@@ -308,8 +312,8 @@ export default function ProductDetailModal({
             {/* Description */}
             {product.description && (
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-foreground mb-3">Ürün Açıklaması</h3>
-                <div className="text-muted-foreground text-base leading-relaxed">
+                <h3 className="text-xl font-semibold text-foreground mb-3">Ürün Açıklaması</h3>
+                <div className="text-muted-foreground text-lg leading-relaxed">
                   {formatDescription(product.description)}
                 </div>
               </div>

@@ -88,29 +88,29 @@ export default function Header() {
 
             {/* Mobile: Theme Toggle + Menu Button */}
             <div className="flex md:hidden items-center gap-2">
-              {/* Theme Toggle - Mobile */}
+              {/* Theme Toggle - Mobile v11.0: büyütüldü */}
               <button
                 onClick={toggleTheme}
-                className="w-11 h-11 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-all duration-300"
+                className="w-14 h-14 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-all duration-300"
                 aria-label={theme === 'light' ? 'Karanlık temaya geç' : 'Aydınlık temaya geç'}
               >
-                <Sun className={`w-5 h-5 text-[#FFD300] absolute transition-all duration-300 ${
+                <Sun className={`w-6 h-6 text-[#FFD300] absolute transition-all duration-300 ${
                   theme === 'light' ? 'rotate-0 scale-100 opacity-100' : 'rotate-90 scale-0 opacity-0'
                 }`} />
-                <Moon className={`w-5 h-5 text-[#FFD300] absolute transition-all duration-300 ${
+                <Moon className={`w-6 h-6 text-[#FFD300] absolute transition-all duration-300 ${
                   theme === 'dark' ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-0 opacity-0'
                 }`} />
               </button>
 
-              {/* Mobile Menu Button */}
+              {/* Mobile Menu Button v11.0: büyütüldü */}
               <Button
                 variant="ghost"
                 size="icon"
-                className="w-12 h-12"
+                className="w-16 h-16"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 aria-label="Menüyü aç/kapat"
               >
-                {mobileMenuOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
+                {mobileMenuOpen ? <X className="w-8 h-8" /> : <Menu className="w-8 h-8" />}
               </Button>
             </div>
           </div>
@@ -168,7 +168,7 @@ export default function Header() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className={`block px-5 py-4 rounded-xl text-base font-medium transition-colors ${
+                    className={`block px-5 py-5 rounded-xl text-lg font-medium transition-colors ${
                       location === link.href
                         ? "bg-[#FFD300]/10 text-[#FFD300]"
                         : "text-foreground hover:bg-muted"

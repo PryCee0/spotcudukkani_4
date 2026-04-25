@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { nanoid } from "nanoid";
+import sharp from "sharp";
 
 // v7.0: Security - Maximum file size (10MB for images)
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
@@ -174,7 +175,7 @@ export async function localStoragePut(
   mimeType: string,
   prefix: string = "uploads",
   seoTitle?: string
-): Promise<{ key: string; url: string }> {
+): Promise<{ key: string; url: string; thumbnailUrl?: string }> {
   // v7.0: Security - Validate file size
   if (buffer.length > MAX_IMAGE_SIZE) {
     throw new Error(`File too large: ${(buffer.length / 1024 / 1024).toFixed(1)}MB exceeds ${MAX_IMAGE_SIZE / 1024 / 1024}MB limit`);
@@ -195,28 +196,74 @@ export async function localStoragePut(
 
   const uploadDir = getUploadDirCached();
 
-  // Get file extension from mime type
-  const ext = getExtensionFromMimeType(mimeType);
-
-  // v10.0: SEO-friendly filename — başlık varsa slug'dan oluştur
+  // v11.0: SEO-friendly filename — her zaman .webp uzantılı
   const seoSlug = seoTitle ? createSeoSlug(seoTitle) : null;
-  const filename = seoSlug
-    ? `${seoSlug}-${nanoid(6)}.${ext}`
-    : `${prefix}-${nanoid()}.${ext}`;
-  const filePath = path.join(uploadDir, filename);
+  const baseName = seoSlug
+    ? `${seoSlug}-${nanoid(6)}`
+    : `${prefix}-${nanoid()}`;
 
-  // Write file to disk
-  await fs.promises.writeFile(filePath, buffer);
+  const mainFilename = `${baseName}.webp`;
+  const thumbFilename = `${baseName}-thumb.webp`;
 
-  // Return relative URL (served from /uploads/)
-  const url = `${getPublicUrlPath()}/${filename}`;
+  // ═══ v11.0: Sharp Optimizasyon Pipeline ═══
+  // Orijinal buffer → optimize edilmiş WebP + thumbnail
+  try {
+    // 1. Ana görsel: max 1200×1200, WebP kalite 80
+    //    Hedef: 1.5MB JPEG → ~80-120 KB WebP
+    const optimized = await sharp(buffer)
+      .resize(1200, 1200, {
+        fit: 'inside',
+        withoutEnlargement: true, // Küçük görselleri büyütme
+      })
+      .webp({ quality: 80 })
+      .toBuffer();
 
-  console.log(`[Storage] File saved: ${filePath} -> ${url}`);
+    // 2. Thumbnail: max 400×400, WebP kalite 70
+    //    Hedef: ~15-30 KB (carousel küçük resimler için)
+    const thumbnailBuffer = await sharp(buffer)
+      .resize(400, 400, {
+        fit: 'inside',
+        withoutEnlargement: true,
+      })
+      .webp({ quality: 70 })
+      .toBuffer();
 
-  return {
-    key: filename,
-    url,
-  };
+    // Ana görseli kaydet
+    const mainPath = path.join(uploadDir, mainFilename);
+    await fs.promises.writeFile(mainPath, optimized);
+
+    // Thumbnail'i kaydet
+    const thumbPath = path.join(uploadDir, thumbFilename);
+    await fs.promises.writeFile(thumbPath, thumbnailBuffer);
+
+    const mainUrl = `${getPublicUrlPath()}/${mainFilename}`;
+    const thumbUrl = `${getPublicUrlPath()}/${thumbFilename}`;
+
+    const originalKB = Math.round(buffer.length / 1024);
+    const optimizedKB = Math.round(optimized.length / 1024);
+    console.log(`[Storage] Image optimized: ${originalKB}KB → ${optimizedKB}KB (${Math.round((1 - optimizedKB/originalKB) * 100)}% azalma) → ${mainPath}`);
+
+    return {
+      key: mainFilename,
+      url: mainUrl,
+      thumbnailUrl: thumbUrl,
+    };
+  } catch (sharpError) {
+    // Sharp başarısız olursa orijinal buffer ile devam et (graceful fallback)
+    console.warn(`[Storage] Sharp optimization failed, saving original:`, sharpError);
+    const ext = getExtensionFromMimeType(mimeType);
+    const fallbackFilename = `${baseName}.${ext}`;
+    const filePath = path.join(uploadDir, fallbackFilename);
+    await fs.promises.writeFile(filePath, buffer);
+
+    const url = `${getPublicUrlPath()}/${fallbackFilename}`;
+    console.log(`[Storage] File saved (unoptimized): ${filePath} -> ${url}`);
+
+    return {
+      key: fallbackFilename,
+      url,
+    };
+  }
 }
 
 /**

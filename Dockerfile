@@ -33,6 +33,9 @@ RUN ls -la /app/dist/ && \
 # ---- Production Stage ----
 FROM node:20-alpine AS production
 
+# v11.0: Sharp native dependency (görsel optimizasyon için)
+RUN apk add --no-cache vips-dev
+
 # pnpm kurulumu
 RUN corepack enable && corepack prepare pnpm@10.4.1 --activate
 

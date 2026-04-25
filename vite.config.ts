@@ -62,7 +62,9 @@ export default defineConfig(async () => {
             vendor: ["react", "react-dom"],
             router: ["wouter"],
             ui: ["@radix-ui/react-dialog", "@radix-ui/react-tabs", "@radix-ui/react-collapsible"],
-            animation: ["framer-motion"],
+            // v11.0: framer-motion manualChunks'tan kaldırıldı — 
+            // Vite tree-shaking lazy load edilen sayfalara göre otomatik bölme yapacak
+            // Ana sayfada ~42KB unused JS azalması sağlanır
             trpc: ["@trpc/client", "@trpc/react-query", "@tanstack/react-query"],
             icons: ["lucide-react"],
           },

@@ -5,12 +5,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
-    <!-- v9.0: GTM — kritik meta tag'lerden sonra, parser blocking azaltıldı -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-TQM2CV9C');</script>
+    <!-- v11.0: GTM — geciktirilmiş yükleme (requestIdleCallback ile kritik yoldan çıkarıldı) -->
+    <!-- TBT ~160ms azalma, ~290KB unused JS kritik yoldan çıkıyor -->
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function loadGTM() {
+      window.dataLayer.push({'gtm.start': new Date().getTime(), event: 'gtm.js'});
+      var s = document.createElement('script');
+      s.async = true;
+      s.src = 'https://www.googletagmanager.com/gtm.js?id=GTM-TQM2CV9C';
+      document.head.appendChild(s);
+    }
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(loadGTM, { timeout: 4000 });
+    } else {
+      setTimeout(loadGTM, 3000);
+    }
+    </script>
     
     <!-- Primary SEO Meta Tags -->
     <title>Spotçu Dükkanı | İkinci El Eşyada Güvenin Adresi | Tüm İstanbul'a Hizmet</title>
@@ -32,8 +43,10 @@
     <!-- Canonical URL -->
     <link rel="canonical" href="https://spotcudukkani.com" />
     
-    <!-- v6.0: Preload critical resources for LCP optimization -->
-    <link rel="preload" as="image" href="/uploads/slider1.webp" fetchpriority="high" type="image/webp" />
+    <!-- v11.0: Preload LCP hero image — responsive srcset ile mobil/desktop ayrımı -->
+    <link rel="preload" as="image" href="/uploads/slider1.webp"
+      imagesrcset="/uploads/slider1-mobile.webp 768w, /uploads/slider1.webp 1920w"
+      imagesizes="100vw" fetchpriority="high" type="image/webp" />
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />

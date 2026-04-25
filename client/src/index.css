@@ -354,4 +354,24 @@
     from { opacity: 0; transform: scale(0.95); }
     to { opacity: 1; transform: scale(1); }
   }
+
+  .animate-slow-spin {
+    animation: slow-spin 15s linear infinite;
+    will-change: transform;
+  }
+
+  .animate-custom-bounce {
+    animation: custom-bounce 2s infinite;
+    will-change: transform;
+  }
+
+  @keyframes slow-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes custom-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(8px); }
+  }
 }

@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, memo } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown } from "lucide-react";
 
 const PHONE_NUMBER = "+905393160007";
 
 // v4.5: Slider görselleri /uploads/ klasöründen yükleniyor
+// v11.0: Mobil versiyonlar srcset ile responsive yükleme
 const slides = [
   {
     id: 1,
@@ -13,6 +14,7 @@ const slides = [
     subtitle: "İkinci El Eşyada Şeffaf Hizmet.",
     bgGradient: "from-[#2F2F2F]/95 to-[#2F2F2F]/80",
     bgImage: "/uploads/slider1.webp",
+    bgImageMobile: "/uploads/slider1-mobile.webp",
   },
   {
     id: 2,
@@ -20,6 +22,7 @@ const slides = [
     subtitle: "Tüm İlçelere Ücretsiz Ekspertiz.",
     bgGradient: "from-[#2F2F2F]/95 to-[#2F2F2F]/80",
     bgImage: "/uploads/slider2.webp",
+    bgImageMobile: "/uploads/slider2-mobile.webp",
   },
   {
     id: 3,
@@ -27,6 +30,7 @@ const slides = [
     subtitle: "Kaliteli Spot Eşya Kapınızda.",
     bgGradient: "from-[#2F2F2F]/95 to-[#2F2F2F]/80",
     bgImage: "/uploads/slider3.webp",
+    bgImageMobile: "/uploads/slider3-mobile.webp",
   },
 ];
 
@@ -58,9 +62,11 @@ function HeroSlider() {
             index === currentSlide ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
         >
-          {/* Background Image - LCP optimized */}
+          {/* Background Image - v11.0: responsive srcSet */}
           <img
             src={slide.bgImage}
+            srcSet={`${slide.bgImageMobile} 768w, ${slide.bgImage} 1920w`}
+            sizes="100vw"
             alt={`${slide.title} - Spotçu Dükkanı İstanbul ikinci el eşya`}
             className="absolute inset-0 w-full h-full object-cover"
             loading={index === 0 ? "eager" : "lazy"}
@@ -73,8 +79,8 @@ function HeroSlider() {
           <div className={`absolute inset-0 bg-gradient-to-r ${slide.bgGradient}`} />
 
           {/* Content */}
-          <div className="relative h-full container flex flex-col justify-center items-start">
-            <div className="max-w-3xl xl:max-w-4xl text-white -mt-16 md:-mt-24">
+          <div className="relative h-full container flex flex-col justify-start pt-24 md:justify-center md:pt-0 items-start">
+            <div className="max-w-3xl xl:max-w-4xl text-white md:-mt-24">
               <h1
                 className={`text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-5 lg:mb-6 leading-tight transition-all duration-500 ${
                   index === currentSlide
@@ -140,7 +146,7 @@ function HeroSlider() {
       </button>
 
       {/* Dots - Guaranteed to be visible ABOVE the TrustBanner */}
-      <div className="absolute bottom-16 md:bottom-20 lg:bottom-24 left-1/2 -translate-x-1/2 flex gap-3 z-10">
+      <div className="absolute top-[360px] md:top-auto left-6 translate-x-0 md:bottom-20 lg:bottom-24 md:left-1/2 md:-translate-x-1/2 flex gap-3 z-10">
         {slides.map((_, index) => (
           <button
             key={index}
@@ -152,6 +158,15 @@ function HeroSlider() {
           />
         ))}
       </div>
+
+      {/* Chevron Down for mobile */}
+      <button
+        onClick={() => document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' })}
+        className="absolute bottom-6 left-1/2 -translate-x-1/2 md:hidden z-20 text-white/80 hover:text-white transition-colors animate-custom-bounce"
+        aria-label="Aşağı kaydır"
+      >
+        <ChevronDown className="w-10 h-10 drop-shadow-lg" />
+      </button>
     </section>
   );
 }
