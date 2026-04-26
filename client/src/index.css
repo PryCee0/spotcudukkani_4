@@ -161,6 +161,17 @@
     font-size: 80%;
   }
 
+  /* v13.0: Mobilde tüm yazılar %12 büyük (80% × 1.12 = 89.6%) — hero hariç */
+  @media (max-width: 767px) {
+    html {
+      font-size: 89.6%;
+    }
+    /* Hero karşılama ekranı orijinal ölçeği korur */
+    .mobile-hero-reset {
+      font-size: 0.8929rem; /* 80/89.6 oranı — hero'yu 80%'e geri döndürür */
+    }
+  }
+
   * {
     @apply border-border outline-ring/50;
   }

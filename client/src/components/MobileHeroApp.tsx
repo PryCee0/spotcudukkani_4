@@ -69,15 +69,12 @@ function BentoGrid() {
         <div className="absolute inset-0 bg-gradient-to-b from-[#2A1010]/70 to-[#1a0808]/80" />
 
         <div className="relative flex flex-col justify-between h-full p-[3.5vw]">
-          {/* Başlık — şık dikey yerleşim, %20 büyük */}
+          {/* Başlık — %18 büyütülmüş */}
           <div>
-            <p className="text-[#FFD300] font-semibold tracking-widest uppercase" style={{ fontSize: "clamp(9px, 2.5vw, 12px)" }}>
-              Spotçu Dükkanı
-            </p>
-            <h2 className="text-white font-light leading-tight mt-[1vw]" style={{ fontSize: "clamp(18px, 5.5vw, 26px)" }}>
+            <h2 className="text-white font-light leading-tight" style={{ fontSize: "clamp(21px, 6.5vw, 31px)" }}>
               2.El Spot
             </h2>
-            <h2 className="text-[#FFD300] font-bold leading-tight" style={{ fontSize: "clamp(18px, 5.5vw, 26px)" }}>
+            <h2 className="text-[#FFD300] font-bold leading-tight" style={{ fontSize: "clamp(21px, 6.5vw, 31px)" }}>
               Eşya Merkezi
             </h2>
           </div>
@@ -121,8 +118,8 @@ function BentoGrid() {
 
       {/* ═══ SAĞ KOLON — Satış + İletişim ═══ */}
       <div className="flex flex-col gap-[2vw]">
-        {/* Üst: Satış Teklifi — %15-20 kısaltıldı (flex-[2.5] → eskiden flex-[3]) */}
-        <div className="relative rounded-[4vw] overflow-hidden flex-[2.5] hero-box-right">
+        {/* Üst: Satış Teklifi — büyütüldü, alt boxlarla kare orana eşitlendi */}
+        <div className="relative rounded-[4vw] overflow-hidden flex-[3.5] hero-box-right">
           <img
             src="/uploads/card-handshake.webp"
             alt="Eşya satış anlaşması"
@@ -132,13 +129,13 @@ function BentoGrid() {
           />
           <div className="absolute inset-0 bg-gradient-to-b from-[#2A1010]/65 to-[#1a0808]/80" />
           <div className="relative flex flex-col justify-between p-[3vw] h-full">
-            <p className="text-white/95 font-light leading-snug tracking-wide" style={{ fontSize: "clamp(11px, 3vw, 14px)" }}>
+            <p className="text-white font-light leading-snug tracking-wide" style={{ fontSize: "clamp(13px, 3.5vw, 16px)" }}>
               Spot Eşyanı Değerinde Tarafımıza Satmak İstermisin?
             </p>
-            {/* Letter-spacing azaltıldı — daha şık */}
+            {/* Letter-spacing azaltıldı — daha şık, opaklık düşürüldü */}
             <Link href="/esya-sat">
               <div
-                className="bg-[#E88A2D] active:bg-[#D4781A] text-white text-center font-semibold rounded-[3vw] transition-colors cursor-pointer mt-auto tracking-tight"
+                className="bg-[#E88A2D]/80 active:bg-[#D4781A]/90 text-white text-center font-semibold rounded-[3vw] transition-colors cursor-pointer mt-auto tracking-tight backdrop-blur-sm"
                 style={{ padding: "clamp(10px, 2.5vw, 14px)", fontSize: "clamp(12px, 3.4vw, 16px)" }}
               >
                 Ücretsiz Ekspertiz
@@ -147,8 +144,8 @@ function BentoGrid() {
           </div>
         </div>
 
-        {/* Alt: İletişim İkonları — yeşil/mavi tam kutu + blog kitap ikonu */}
-        <div className="grid grid-cols-2 gap-[1.5vw] flex-[2.5] hero-box-icons">
+        {/* Alt: İletişim İkonları — 3'lü tek satır */}
+        <div className="grid grid-cols-3 gap-[1.5vw] flex-[1] hero-box-icons">
           {/* Telefon — TAM YEŞİL */}
           <a
             href={`tel:${PHONE_NUMBER}`}
@@ -171,14 +168,6 @@ function BentoGrid() {
               <path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.832-1.438A9.955 9.955 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18a8 8 0 01-4.16-1.168l-.29-.174-3.012.79.804-2.94-.192-.303A8 8 0 1112 20z" />
             </svg>
           </a>
-
-          {/* Blog — Kitap ikonlu şık kutu */}
-          <Link href="/blog">
-            <div className="flex flex-col items-center justify-center h-full rounded-[3vw] bg-[#2F2F2F] active:bg-[#404040] shadow-md active:shadow-lg transition-all cursor-pointer gap-[0.5vw]">
-              <BookOpen className="text-[#FFD300]" style={{ width: "clamp(16px, 4.5vw, 22px)", height: "clamp(16px, 4.5vw, 22px)" }} />
-              <span className="font-semibold text-white/90" style={{ fontSize: "clamp(9px, 2.5vw, 12px)" }}>BLOG</span>
-            </div>
-          </Link>
 
           {/* Facebook — TAM MAVİ */}
           <a
@@ -259,7 +248,7 @@ function TrustSlideCarousel() {
           <div
             ref={containerRef}
             className={`relative cursor-pointer ${hasNudged || prefersReducedMotion ? "" : "slide-nudge"}`}
-            style={{ height: "clamp(120px, 22dvh, 180px)", touchAction: "pan-y" }}
+            style={{ height: "clamp(136px, 24.9dvh, 203px)", touchAction: "pan-y" }}
             onTouchStart={onTouchStart}
             onTouchEnd={onTouchEnd}
           >
@@ -355,7 +344,7 @@ function ScrollDownButton() {
 
 function MobileHeroApp() {
   return (
-    <div className="md:hidden bg-[#F9F8F4] dark:bg-background">
+    <div className="md:hidden bg-[#F9F8F4] dark:bg-background mobile-hero-reset">
       <BentoGrid />
       <TrustSlideCarousel />
       <ScrollDownButton />
