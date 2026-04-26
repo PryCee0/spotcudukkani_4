@@ -374,4 +374,65 @@
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(8px); }
   }
+
+  /* v12.0: Slide nudge — carousel auto-slide uyarı animasyonu */
+  @keyframes nudge-left {
+    0%, 100% { transform: translateX(0); }
+    15% { transform: translateX(-5vw); }
+    30% { transform: translateX(1.5vw); }
+    45% { transform: translateX(-2.5vw); }
+    60% { transform: translateX(0); }
+  }
+
+  .slide-nudge {
+    animation: nudge-left 1.5s ease-in-out;
+    animation-delay: 2.5s;
+    animation-fill-mode: backwards;
+    will-change: transform;
+  }
+
+  /* v12.2: Staggered entrance — box'lar şık şekilde yerlerine oturur */
+  @keyframes hero-enter-left {
+    from { opacity: 0; transform: translateX(-8vw) scale(0.95); }
+    to { opacity: 1; transform: translateX(0) scale(1); }
+  }
+
+  @keyframes hero-enter-right {
+    from { opacity: 0; transform: translateX(8vw) scale(0.95); }
+    to { opacity: 1; transform: translateX(0) scale(1); }
+  }
+
+  @keyframes hero-enter-up {
+    from { opacity: 0; transform: translateY(6vw) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .hero-box-left {
+    animation: hero-enter-left 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .hero-box-right {
+    animation: hero-enter-right 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: 0.12s;
+  }
+
+  .hero-box-icons {
+    animation: hero-enter-right 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: 0.24s;
+  }
+
+  .hero-box-carousel {
+    animation: hero-enter-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: 0.35s;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-box-left,
+    .hero-box-right,
+    .hero-box-icons,
+    .hero-box-carousel,
+    .slide-nudge {
+      animation: none !important;
+    }
+  }
 }

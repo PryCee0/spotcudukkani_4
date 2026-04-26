@@ -47,11 +47,12 @@ const stats = [
 
 function TrustBanner() {
     return (
-        <section className="relative z-10 w-full -mt-[170px] md:-mt-10 pb-4">
+        // v12.0: Mobilde tamamen gizli — MobileHeroApp carousel bu rolü üstleniyor
+        <section className="relative z-10 w-full hidden md:block -mt-10 pb-4">
             <div className="container md:px-4">
                 <ScrollAnimation direction="up">
                     {/* Desktop View */}
-                    <div className="hidden md:block bg-card rounded-2xl shadow-xl border border-border/30 px-8 py-7 transition-colors duration-300">
+                    <div className="bg-card rounded-2xl shadow-xl border border-border/30 px-8 py-7 transition-colors duration-300">
                         <div className="grid grid-cols-4 gap-8">
                             {stats.map((stat, index) => (
                                 <div
@@ -74,25 +75,6 @@ function TrustBanner() {
                                 </div>
                             ))}
                         </div>
-                    </div>
-
-                    {/* Mobile View - Sarkan İpler */}
-                    <div className="md:hidden flex justify-between items-start pt-4">
-                        {stats.map((stat, index) => (
-                            <div key={index} className="flex flex-col items-center w-[23%] relative">
-                                {/* Dönen Daire */}
-                                <div className={`w-10 h-10 rounded-full ${stat.bg} flex items-center justify-center relative z-10 animate-slow-spin shadow-sm`}>
-                                    <stat.icon className={`w-5 h-5 ${stat.color}`} />
-                                </div>
-                                {/* İp */}
-                                <div className={`w-[2px] h-6 ${stat.lineColor} -mt-1 relative z-0`}></div>
-                                {/* Kutu */}
-                                <div className="bg-card/95 backdrop-blur-sm border border-border/40 rounded-lg py-2 w-full text-center shadow-md relative z-10">
-                                    <p className={`text-[13px] font-extrabold ${stat.color} leading-none`}>{stat.mobileValue}</p>
-                                    <p className="text-[11px] text-foreground/80 leading-none mt-1 font-bold">{stat.mobileLabel}</p>
-                                </div>
-                            </div>
-                        ))}
                     </div>
                 </ScrollAnimation>
             </div>
