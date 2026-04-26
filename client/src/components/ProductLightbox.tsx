@@ -211,7 +211,7 @@ function ProductLightbox({
                 </div>
             </div>
 
-            {/* Main Image Area */}
+            {/* Main Image Area — pointer events sadece resim pan/zoom için */}
             <div
                 className="flex-1 flex items-center justify-center relative overflow-hidden select-none"
                 onPointerDown={handlePointerDown}
@@ -233,37 +233,37 @@ function ProductLightbox({
                     draggable={false}
                     onDoubleClick={toggleZoom}
                 />
-
-                {/* v9.0: Navigasyon Okları — z-index yükseltildi, her zaman görünür */}
-                {images.length > 1 && (
-                    <>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                goPrev();
-                            }}
-                            onPointerDown={(e) => e.stopPropagation()}
-                            onTouchStart={(e) => e.stopPropagation()}
-                            className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/15 hover:bg-white/30 flex items-center justify-center text-white transition-all backdrop-blur-sm z-[210]"
-                            aria-label="Önceki fotoğraf"
-                        >
-                            <ChevronLeft className="w-6 h-6 md:w-7 md:h-7 pointer-events-none" />
-                        </button>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                goNext();
-                            }}
-                            onPointerDown={(e) => e.stopPropagation()}
-                            onTouchStart={(e) => e.stopPropagation()}
-                            className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/15 hover:bg-white/30 flex items-center justify-center text-white transition-all backdrop-blur-sm z-[210]"
-                            aria-label="Sonraki fotoğraf"
-                        >
-                            <ChevronRight className="w-6 h-6 md:w-7 md:h-7 pointer-events-none" />
-                        </button>
-                    </>
-                )}
             </div>
+
+            {/* v12.3: Navigasyon Okları — AYRI katmanda, pointer-events izole */}
+            {images.length > 1 && (
+                <>
+                    <button
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            goPrev();
+                        }}
+                        className="fixed left-3 md:left-6 top-1/2 -translate-y-1/2 w-14 h-14 md:w-16 md:h-16 rounded-full bg-white/20 hover:bg-white/40 active:bg-white/60 flex items-center justify-center text-white transition-all z-[250] cursor-pointer"
+                        style={{ pointerEvents: "auto" }}
+                        aria-label="Önceki fotoğraf"
+                    >
+                        <ChevronLeft className="w-7 h-7 md:w-8 md:h-8" />
+                    </button>
+                    <button
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            goNext();
+                        }}
+                        className="fixed right-3 md:right-6 top-1/2 -translate-y-1/2 w-14 h-14 md:w-16 md:h-16 rounded-full bg-white/20 hover:bg-white/40 active:bg-white/60 flex items-center justify-center text-white transition-all z-[250] cursor-pointer"
+                        style={{ pointerEvents: "auto" }}
+                        aria-label="Sonraki fotoğraf"
+                    >
+                        <ChevronRight className="w-7 h-7 md:w-8 md:h-8" />
+                    </button>
+                </>
+            )}
 
             {/* Thumbnail Strip */}
             {images.length > 1 && (
