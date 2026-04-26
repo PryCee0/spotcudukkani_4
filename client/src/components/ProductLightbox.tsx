@@ -1,21 +1,12 @@
 import { useState, useCallback, useEffect, useRef, memo } from "react";
-import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Loader2 } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
 
 /**
- * v11.0: BAŞTAN YENİDEN YAZILDI
- * 
- * Çözülen sorunlar:
- * - Mobilde sağ/sol butonları ve kapatma butonu çalışmıyordu
- * - Pointer + Touch event çakışması kaldırıldı
- * - Lightbox açıldıktan sonra site afallamış çalışıyordu (memory leak)
- * - Görsel yükleme çok uzun sürüyordu (preloading eklendi)
- * - Butonlar çok küçüktü (mobil erişilebilirlik artırıldı)
- * 
- * Yeni yaklaşım:
- * - Sadece Touch event'leri (mobil) + onClick (desktop) — pointer event yok
- * - Komşu görselleri prefetch ile önyükleme
- * - useEffect cleanup garantili — body overflow her zaman reset
- * - Butonlar izole z-index + pointer-events: auto
+ * v9.0: Tamamen yeniden yazıldı.
+ * - onIndexChange callback ile dış bileşenle senkronizasyon
+ * - Touch swipe desteği
+ * - Çift katmanlı lightbox çakışması çözüldü (ImageCarousel'ın fullscreen'i kaldırıldı)
+ * - Yön tuşları her zaman görünür ve çalışır
  */
 
 interface ProductLightboxProps {
@@ -36,57 +27,38 @@ function ProductLightbox({
     title = "Ürün",
 }: ProductLightboxProps) {
     const [currentIndex, setCurrentIndex] = useState(initialIndex);
-    const [isZoomed, setIsZoomed] = useState(false);
-    const [imageLoaded, setImageLoaded] = useState(false);
+    const [scale, setScale] = useState(1);
+    const [position, setPosition] = useState({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
-    // Touch swipe refs — sadece ref kullanarak sıfır re-render
-    const touchStartX = useRef(0);
-    const touchStartY = useRef(0);
-    const isSwiping = useRef(false);
+    // Touch swipe refs
+    const touchStartRef = useRef<number | null>(null);
+    const touchEndRef = useRef<number | null>(null);
 
-    // Reset when opening or initialIndex changes
+    // Reset when opening
     useEffect(() => {
         if (isOpen) {
             setCurrentIndex(initialIndex);
-            setIsZoomed(false);
-            setImageLoaded(false);
+            setScale(1);
+            setPosition({ x: 0, y: 0 });
         }
     }, [isOpen, initialIndex]);
 
-    // Lock body scroll — cleanup GARANTILI
+    // Lock body scroll when lightbox is open
     useEffect(() => {
-        if (!isOpen) return;
-        
-        const originalOverflow = document.body.style.overflow;
-        const originalTouchAction = document.body.style.touchAction;
-        document.body.style.overflow = "hidden";
-        document.body.style.touchAction = "none";
-        
+        if (isOpen) {
+            document.body.style.overflow = "hidden";
+        }
         return () => {
-            document.body.style.overflow = originalOverflow;
-            document.body.style.touchAction = originalTouchAction;
+            document.body.style.overflow = "";
         };
     }, [isOpen]);
 
-    // Preload komşu görselleri
-    useEffect(() => {
-        if (!isOpen || images.length <= 1) return;
-
-        const preloadIndexes = [
-            (currentIndex + 1) % images.length,
-            (currentIndex - 1 + images.length) % images.length,
-        ];
-
-        preloadIndexes.forEach(idx => {
-            const img = new Image();
-            img.src = images[idx]?.url || "";
-        });
-    }, [isOpen, currentIndex, images]);
-
     const updateIndex = useCallback((newIndex: number) => {
         setCurrentIndex(newIndex);
-        setIsZoomed(false);
-        setImageLoaded(false);
+        setScale(1);
+        setPosition({ x: 0, y: 0 });
         onIndexChange?.(newIndex);
     }, [onIndexChange]);
 
@@ -101,14 +73,13 @@ function ProductLightbox({
     }, [images.length, currentIndex, updateIndex]);
 
     const toggleZoom = useCallback(() => {
-        setIsZoomed(prev => !prev);
-    }, []);
-
-    const handleClose = useCallback(() => {
-        setIsZoomed(false);
-        setImageLoaded(false);
-        onClose();
-    }, [onClose]);
+        if (scale > 1) {
+            setScale(1);
+            setPosition({ x: 0, y: 0 });
+        } else {
+            setScale(2);
+        }
+    }, [scale]);
 
     // Keyboard navigation
     useEffect(() => {
@@ -126,38 +97,74 @@ function ProductLightbox({
                     break;
                 case "Escape":
                     e.preventDefault();
-                    handleClose();
+                    onClose();
+                    break;
+                case "+":
+                case "=":
+                    setScale((s) => Math.min(s + 0.5, 3));
+                    break;
+                case "-":
+                    setScale((s) => {
+                        const newScale = Math.max(s - 0.5, 1);
+                        if (newScale === 1) setPosition({ x: 0, y: 0 });
+                        return newScale;
+                    });
                     break;
             }
         };
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [isOpen, goNext, goPrev, handleClose]);
+    }, [isOpen, goNext, goPrev, onClose]);
 
-    // Touch handlers — basit swipe, pointer event yok
+    // Touch swipe support
     const onTouchStart = useCallback((e: React.TouchEvent) => {
-        if (isZoomed) return;
-        touchStartX.current = e.touches[0].clientX;
-        touchStartY.current = e.touches[0].clientY;
-        isSwiping.current = true;
-    }, [isZoomed]);
+        if (scale > 1) return; // Zoom modunda swipe yapma
+        touchStartRef.current = e.touches[0].clientX;
+        touchEndRef.current = null;
+    }, [scale]);
 
-    const onTouchEnd = useCallback((e: React.TouchEvent) => {
-        if (!isSwiping.current || isZoomed) return;
-        isSwiping.current = false;
+    const onTouchMove = useCallback((e: React.TouchEvent) => {
+        if (scale > 1) return;
+        touchEndRef.current = e.touches[0].clientX;
+    }, [scale]);
 
-        const touchEndX = e.changedTouches[0].clientX;
-        const touchEndY = e.changedTouches[0].clientY;
-        const diffX = touchStartX.current - touchEndX;
-        const diffY = Math.abs(touchStartY.current - touchEndY);
+    const onTouchEnd = useCallback(() => {
+        if (scale > 1) return;
+        if (touchStartRef.current === null || touchEndRef.current === null) return;
+        const distance = touchStartRef.current - touchEndRef.current;
+        const minSwipe = 50;
+        if (distance > minSwipe) goNext();
+        else if (distance < -minSwipe) goPrev();
+        touchStartRef.current = null;
+        touchEndRef.current = null;
+    }, [scale, goNext, goPrev]);
 
-        // Yatay swipe threshold: 50px, dikey hareket çok büyük değilse
-        if (Math.abs(diffX) > 50 && diffY < 100) {
-            if (diffX > 0) goNext();
-            else goPrev();
-        }
-    }, [isZoomed, goNext, goPrev]);
+    // Mouse/touch drag for panning when zoomed
+    const handlePointerDown = useCallback(
+        (e: React.PointerEvent) => {
+            if (scale <= 1) return;
+            e.preventDefault();
+            setIsDragging(true);
+            setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+        },
+        [scale, position]
+    );
+
+    const handlePointerMove = useCallback(
+        (e: React.PointerEvent) => {
+            if (!isDragging || scale <= 1) return;
+            setPosition({
+                x: e.clientX - dragStart.x,
+                y: e.clientY - dragStart.y,
+            });
+        },
+        [isDragging, scale, dragStart]
+    );
+
+    const handlePointerUp = useCallback(() => {
+        setIsDragging(false);
+    }, []);
 
     if (!isOpen || images.length === 0) return null;
 
@@ -166,38 +173,40 @@ function ProductLightbox({
 
     return (
         <div
-            className="fixed inset-0 z-[200] bg-black/95 flex flex-col"
-            role="dialog"
-            aria-label={`${title} - Fotoğraf büyütme`}
+            className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-sm flex flex-col"
+            onClick={(e) => {
+                if (e.target === e.currentTarget) onClose();
+            }}
         >
-            {/* Top Bar — büyütülmüş butonlar (%85 büyütme) */}
-            <div className="flex items-center justify-between px-4 md:px-6 py-3 shrink-0 relative z-[220]">
-                <div className="flex items-center gap-3 text-white/80">
-                    <span className="text-base md:text-lg font-medium">
+            {/* Top Bar */}
+            <div className="flex items-center justify-between px-4 md:px-6 py-3 text-white/80 shrink-0">
+                <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium">
                         {currentIndex + 1} / {images.length}
                     </span>
                     <span className="text-sm text-white/50 hidden md:block">— {title}</span>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                     <button
                         onClick={toggleZoom}
-                        className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/15 hover:bg-white/25 active:bg-white/35 flex items-center justify-center transition-colors"
-                        style={{ pointerEvents: 'auto' }}
-                        aria-label={isZoomed ? "Küçült" : "Büyüt"}
+                        className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                        aria-label={scale > 1 ? "Küçült" : "Büyüt"}
                     >
-                        {isZoomed ? (
-                            <ZoomOut className="w-6 h-6 md:w-7 md:h-7 text-white" />
+                        {scale > 1 ? (
+                            <ZoomOut className="w-5 h-5" />
                         ) : (
-                            <ZoomIn className="w-6 h-6 md:w-7 md:h-7 text-white" />
+                            <ZoomIn className="w-5 h-5" />
                         )}
                     </button>
                     <button
-                        onClick={handleClose}
-                        className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/15 hover:bg-white/25 active:bg-white/35 flex items-center justify-center transition-colors"
-                        style={{ pointerEvents: 'auto' }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onClose();
+                        }}
+                        className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
                         aria-label="Kapat"
                     >
-                        <X className="w-6 h-6 md:w-7 md:h-7 text-white" />
+                        <X className="w-5 h-5" />
                     </button>
                 </div>
             </div>
@@ -205,33 +214,27 @@ function ProductLightbox({
             {/* Main Image Area */}
             <div
                 className="flex-1 flex items-center justify-center relative overflow-hidden select-none"
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerLeave={handlePointerUp}
                 onTouchStart={onTouchStart}
+                onTouchMove={onTouchMove}
                 onTouchEnd={onTouchEnd}
-                onClick={(e) => {
-                    // Arka plana tıklayınca kapat (butonlar stopPropagation ile korunuyor)
-                    if (e.target === e.currentTarget) handleClose();
-                }}
+                style={{ cursor: scale > 1 ? (isDragging ? "grabbing" : "grab") : "default" }}
             >
-                {/* Loading spinner */}
-                {!imageLoaded && (
-                    <div className="absolute inset-0 flex items-center justify-center z-10">
-                        <Loader2 className="w-10 h-10 text-[#FFD300] animate-spin" />
-                    </div>
-                )}
-
                 <img
-                    key={currentImage.url}  // Force re-mount on index change
                     src={currentImage.url}
                     alt={`${title} - Fotoğraf ${currentIndex + 1}`}
-                    className={`max-h-[75vh] max-w-[90vw] object-contain transition-all duration-300 ${
-                        isZoomed ? "scale-[2] cursor-move" : "scale-100"
-                    } ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+                    className="max-h-[80vh] max-w-[90vw] object-contain transition-transform duration-200"
+                    style={{
+                        transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
+                    }}
                     draggable={false}
-                    onLoad={() => setImageLoaded(true)}
                     onDoubleClick={toggleZoom}
                 />
 
-                {/* Navigasyon Okları — her zaman görünür, izole z-index */}
+                {/* v9.0: Navigasyon Okları — z-index yükseltildi, her zaman görünür */}
                 {images.length > 1 && (
                     <>
                         <button
@@ -239,22 +242,24 @@ function ProductLightbox({
                                 e.stopPropagation();
                                 goPrev();
                             }}
-                            className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 w-14 h-14 md:w-16 md:h-16 rounded-full bg-white/20 hover:bg-white/35 active:bg-white/50 flex items-center justify-center text-white transition-all z-[220]"
-                            style={{ pointerEvents: 'auto' }}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onTouchStart={(e) => e.stopPropagation()}
+                            className="absolute left-3 md:left-6 top-1/2 -translate-y-1/2 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/15 hover:bg-white/30 flex items-center justify-center text-white transition-all backdrop-blur-sm z-[210]"
                             aria-label="Önceki fotoğraf"
                         >
-                            <ChevronLeft className="w-7 h-7 md:w-8 md:h-8" />
+                            <ChevronLeft className="w-6 h-6 md:w-7 md:h-7 pointer-events-none" />
                         </button>
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
                                 goNext();
                             }}
-                            className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 w-14 h-14 md:w-16 md:h-16 rounded-full bg-white/20 hover:bg-white/35 active:bg-white/50 flex items-center justify-center text-white transition-all z-[220]"
-                            style={{ pointerEvents: 'auto' }}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onTouchStart={(e) => e.stopPropagation()}
+                            className="absolute right-3 md:right-6 top-1/2 -translate-y-1/2 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white/15 hover:bg-white/30 flex items-center justify-center text-white transition-all backdrop-blur-sm z-[210]"
                             aria-label="Sonraki fotoğraf"
                         >
-                            <ChevronRight className="w-7 h-7 md:w-8 md:h-8" />
+                            <ChevronRight className="w-6 h-6 md:w-7 md:h-7 pointer-events-none" />
                         </button>
                     </>
                 )}
@@ -262,13 +267,16 @@ function ProductLightbox({
 
             {/* Thumbnail Strip */}
             {images.length > 1 && (
-                <div className="flex items-center justify-center gap-2 px-4 py-3 overflow-x-auto shrink-0 relative z-[220]">
+                <div className="flex items-center justify-center gap-2 px-4 py-3 overflow-x-auto shrink-0">
                     {images.map((img, index) => (
                         <button
                             key={img.key}
-                            onClick={() => updateIndex(index)}
-                            className={`w-16 h-16 md:w-18 md:h-18 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${index === currentIndex
-                                    ? "border-[#FFD300] opacity-100 scale-110"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                updateIndex(index);
+                            }}
+                            className={`w-14 h-14 md:w-16 md:h-16 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-all ${index === currentIndex
+                                    ? "border-[#FFD300] opacity-100 scale-105"
                                     : "border-transparent opacity-50 hover:opacity-80"
                                 }`}
                             aria-label={`Fotoğraf ${index + 1}`}

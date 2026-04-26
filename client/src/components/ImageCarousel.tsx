@@ -114,21 +114,21 @@ export default function ImageCarousel({
     if (imageList.length === 0 || isTransitioning.current) return;
     isTransitioning.current = true;
     setCurrentIndex((prev) => (prev + 1) % imageList.length);
-    setTimeout(() => { isTransitioning.current = false; }, 200);
+    setTimeout(() => { isTransitioning.current = false; }, 320);
   }, [imageList.length, setCurrentIndex]);
 
   const goToPrev = useCallback(() => {
     if (imageList.length === 0 || isTransitioning.current) return;
     isTransitioning.current = true;
     setCurrentIndex((prev) => (prev - 1 + imageList.length) % imageList.length);
-    setTimeout(() => { isTransitioning.current = false; }, 200);
+    setTimeout(() => { isTransitioning.current = false; }, 320);
   }, [imageList.length, setCurrentIndex]);
 
   const goToIndex = useCallback((index: number) => {
     if (isTransitioning.current) return;
     isTransitioning.current = true;
     setCurrentIndex(index);
-    setTimeout(() => { isTransitioning.current = false; }, 200);
+    setTimeout(() => { isTransitioning.current = false; }, 320);
   }, [setCurrentIndex]);
 
   // Auto-play functionality
@@ -138,22 +138,38 @@ export default function ImageCarousel({
     return () => clearInterval(interval);
   }, [autoPlay, autoPlayInterval, goToNext, hasMultipleImages]);
 
-  // v11.0: Touch swipe — basitleştirildi (layout thrashing kaldırıldı)
+  // v8.0: Optimized touch swipe handling using refs (zero re-renders during drag)
   const minSwipeDistance = 40;
 
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     touchEndRef.current = null;
     touchStartRef.current = e.targetTouches[0].clientX;
     isDraggingRef.current = true;
+    if (sliderRef.current) {
+      sliderRef.current.style.transition = 'none';
+      sliderRef.current.style.transform = 'translate3d(0px, 0, 0)';
+    }
   }, []);
 
   const onTouchMove = useCallback((e: React.TouchEvent) => {
     if (!isDraggingRef.current || touchStartRef.current === null) return;
     touchEndRef.current = e.targetTouches[0].clientX;
+    const diff = touchEndRef.current - touchStartRef.current;
+    requestAnimationFrame(() => {
+      if (sliderRef.current && isDraggingRef.current) {
+        const offset = Math.max(-80, Math.min(80, diff));
+        sliderRef.current.style.transform = `translate3d(${offset}px, 0, 0)`;
+      }
+    });
   }, []);
 
   const onTouchEnd = useCallback(() => {
     isDraggingRef.current = false;
+
+    if (sliderRef.current) {
+      sliderRef.current.style.transition = 'transform 0.3s ease-out';
+      sliderRef.current.style.transform = 'translate3d(0px, 0, 0)';
+    }
 
     if (touchStartRef.current === null || touchEndRef.current === null) return;
 
@@ -211,17 +227,17 @@ export default function ImageCarousel({
             />
           </div>
 
-          {/* v11.0: Zoom butonu — büyütüldü */}
+          {/* v9.0: Zoom butonu — tıklama olayını açıkça ayırıyoruz */}
           {onZoomClick && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onZoomClick(currentIndex);
               }}
-              className="absolute top-3 right-3 z-20 w-14 h-14 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center text-white transition-colors backdrop-blur-sm"
+              className="absolute top-3 right-3 z-20 w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center text-white transition-colors backdrop-blur-sm"
               aria-label="Tam ekran görüntüle"
             >
-              <ZoomIn className="w-7 h-7 pointer-events-none" />
+              <ZoomIn className="w-5 h-5 pointer-events-none" />
             </button>
           )}
 
@@ -239,28 +255,30 @@ export default function ImageCarousel({
             <Button
               variant="ghost"
               size="icon"
-              className="absolute left-2 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white/90 hover:bg-white shadow-md text-[#2F2F2F] z-40"
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-md text-[#2F2F2F] z-30"
               onClick={(e) => {
                 e.stopPropagation();
                 goToPrev();
               }}
+              onPointerDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
               aria-label="Önceki fotoğraf"
             >
-              <ChevronLeft className="w-7 h-7 pointer-events-none" />
+              <ChevronLeft className="w-6 h-6 pointer-events-none" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white/90 hover:bg-white shadow-md text-[#2F2F2F] z-40"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-md text-[#2F2F2F] z-30"
               onClick={(e) => {
                 e.stopPropagation();
                 goToNext();
               }}
+              onPointerDown={(e) => e.stopPropagation()}
               onTouchStart={(e) => e.stopPropagation()}
               aria-label="Sonraki fotoğraf"
             >
-              <ChevronRight className="w-7 h-7 pointer-events-none" />
+              <ChevronRight className="w-6 h-6 pointer-events-none" />
             </Button>
           </>
         )}
